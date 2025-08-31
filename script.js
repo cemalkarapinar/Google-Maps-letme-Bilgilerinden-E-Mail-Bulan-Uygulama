@@ -305,19 +305,21 @@ class GoogleMapsScraperWeb {
             const location = city ? `${city}, ${country}` : country;
             const query = `${keyword} ${location}`;
             
-            // Şehir odaklı endpoint'ler
+            // Geniş arama endpoint'leri
             const endpoints = [
-                `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&addressdetails=1&limit=15&extratags=1`,
-                `https://photon.komoot.io/api/?q=${encodeURIComponent(query)}&limit=15`
+                // Ana arama
+                `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&addressdetails=1&limit=20&extratags=1`,
+                // Sadece anahtar kelime
+                `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(keyword)}&countrycodes=tr&format=json&addressdetails=1&limit=20&extratags=1`,
+                // Photon API
+                `https://photon.komoot.io/api/?q=${encodeURIComponent(query)}&limit=20`,
+                // Genel kategori araması
+                `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(keyword)}&format=json&addressdetails=1&limit=20&extratags=1`
             ];
-            
-            // Eğer şehir belirtilmişse, alternatif arama da ekle (city parametresi yerine query'de)
-            if (city) {
-                endpoints.push(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(keyword + ' ' + city)}&countrycodes=tr&format=json&addressdetails=1&limit=15&extratags=1`);
-            }
             
             for (const url of endpoints) {
                 try {
+                    console.log(`OSM API deneniyor: ${url}`);
                     const response = await fetch(url, {
                         headers: {
                             'User-Agent': 'GoogleMapsScraperWeb/1.0 (Educational Purpose)',
@@ -328,8 +330,9 @@ class GoogleMapsScraperWeb {
                     
                     if (response.ok) {
                         const data = await response.json();
+                        console.log(`OSM API yanıt: ${data?.length || data?.features?.length || 0} sonuç`);
                         
-                        if (data && data.length > 0) {
+                        if (data && (data.length > 0 || (data.features && data.features.length > 0))) {
                             let businesses;
                             
                             if (url.includes('photon.komoot.io')) {
@@ -496,10 +499,8 @@ class GoogleMapsScraperWeb {
             const query = city ? `${keyword} ${city} ${country}` : `${keyword} ${country}`;
             const corsProxies = [
                 'https://api.codetabs.com/v1/proxy?quest=',
-                'https://api.allorigins.win/get?url=',
-                // Diğer proxy'ler geçici olarak devre dışı (sertifika/erişim sorunları)
-                // 'https://thingproxy.freeboard.io/fetch/',
-                // 'https://cors-anywhere.herokuapp.com/',
+                // allorigins geçici olarak devre dışı (500 hatası)
+                // 'https://api.allorigins.win/get?url=',
             ];
             
             for (const proxy of corsProxies) {
