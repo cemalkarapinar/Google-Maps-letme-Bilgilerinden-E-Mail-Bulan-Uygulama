@@ -853,6 +853,115 @@ class GoogleMapsScraperWeb {
     openSendMailDialog() {
         alert('Mail gönderme özelliği geliştirme aşamasında!');
     }
+
+    // Yeni güçlü gerçek veri çekme sistemi
+    async tryRealBusinessData(keyword, country, city) {
+        try {
+            this.updateStatus('🔍 Gerçek işletme verileri aranıyor...');
+            
+            // 1. OpenCage Geocoding API (ücretsiz tier)
+            const geocodeData = await this.tryOpenCageAPI(keyword, city, country);
+            if (geocodeData && geocodeData.length > 0) {
+                return geocodeData;
+            }
+
+            // 2. Geonames API (ücretsiz)
+            const geonamesData = await this.tryGeonamesAPI(keyword, city, country);
+            if (geonamesData && geonamesData.length > 0) {
+                return geonamesData;
+            }
+
+            // 3. Wikipedia API ile işletme arama
+            const wikiData = await this.tryWikipediaBusinessAPI(keyword, city, country);
+            if (wikiData && wikiData.length > 0) {
+                return wikiData;
+            }
+
+            return null;
+        } catch (error) {
+            console.error('Gerçek veri çekme hatası:', error);
+            return null;
+        }
+    }
+
+    // OpenCage Geocoding API
+    async tryOpenCageAPI(keyword, city, country) {
+        try {
+            const query = `${keyword} ${city} ${country}`.trim();
+            // OpenCage API key gerektirir, demo için null
+            return null;
+        } catch (error) {
+            return null;
+        }
+    }
+
+    // Geonames API
+    async tryGeonamesAPI(keyword, city, country) {
+        try {
+            const query = `${keyword} ${city} ${country}`.trim();
+            const url = `http://api.geonames.org/searchJSON?q=${encodeURIComponent(query)}&maxRows=20&username=demo`;
+            
+            const response = await fetch(url);
+            if (response.ok) {
+                const data = await response.json();
+                if (data.geonames && data.geonames.length > 0) {
+                    const businesses = data.geonames.map(item => ({
+                        name: item.name || 'Bilinmeyen İşletme',
+                        address: `${item.adminName1 || ''}, ${item.countryName || ''}`.trim(),
+                        phone: 'Bulunamadı',
+                        website: 'Bulunamadı',
+                        email: 'Bulunamadı',
+                        source: 'Geonames'
+                    })).filter(b => b.name !== 'Bilinmeyen İşletme');
+                    
+                    return businesses.length > 0 ? businesses : null;
+                }
+            }
+            return null;
+        } catch (error) {
+            console.error('Geonames API hatası:', error);
+            return null;
+        }
+    }
+
+    // Wikipedia Business API
+    async tryWikipediaBusinessAPI(keyword, city, country) {
+        try {
+            const queries = [
+                `${keyword} ${city}`,
+                `${keyword} ${country}`,
+                `${city} ${keyword}`
+            ];
+
+            for (const query of queries) {
+                try {
+                    const url = `https://tr.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(query)}`;
+                    const response = await fetch(url);
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data && data.extract && !data.extract.includes('may refer to')) {
+                            return [{
+                                name: data.title || query,
+                                address: `${city || ''}, ${country}`.trim(),
+                                phone: 'Bulunamadı',
+                                website: data.content_urls?.desktop?.page || 'Bulunamadı',
+                                email: 'Bulunamadı',
+                                source: 'Wikipedia'
+                            }];
+                        }
+                    }
+                } catch (error) {
+                    console.log(`Wikipedia query failed: ${query}`);
+                }
+            }
+            
+            return null;
+        } catch (error) {
+            console.error('Wikipedia API hatası:', error);
+            return null;
+        }
+    }
 }
 
 // Export fonksiyonları
@@ -1009,112 +1118,4 @@ if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initializeApp);
 } else {
     initializeApp();
-}    
-// Yeni güçlü gerçek veri çekme sistemi
-    async tryRealBusinessData(keyword, country, city) {
-        try {
-            this.updateStatus('🔍 Gerçek işletme verileri aranıyor...');
-            
-            // 1. OpenCage Geocoding API (ücretsiz tier)
-            const geocodeData = await this.tryOpenCageAPI(keyword, city, country);
-            if (geocodeData && geocodeData.length > 0) {
-                return geocodeData;
-            }
-
-            // 2. Geonames API (ücretsiz)
-            const geonamesData = await this.tryGeonamesAPI(keyword, city, country);
-            if (geonamesData && geonamesData.length > 0) {
-                return geonamesData;
-            }
-
-            // 3. Wikipedia API ile işletme arama
-            const wikiData = await this.tryWikipediaBusinessAPI(keyword, city, country);
-            if (wikiData && wikiData.length > 0) {
-                return wikiData;
-            }
-
-            return null;
-        } catch (error) {
-            console.error('Gerçek veri çekme hatası:', error);
-            return null;
-        }
-    }
-
-    // OpenCage Geocoding API
-    async tryOpenCageAPI(keyword, city, country) {
-        try {
-            const query = `${keyword} ${city} ${country}`.trim();
-            // OpenCage API key gerektirir, demo için null
-            return null;
-        } catch (error) {
-            return null;
-        }
-    }
-
-    // Geonames API
-    async tryGeonamesAPI(keyword, city, country) {
-        try {
-            const query = `${keyword} ${city} ${country}`.trim();
-            const url = `http://api.geonames.org/searchJSON?q=${encodeURIComponent(query)}&maxRows=20&username=demo`;
-            
-            const response = await fetch(url);
-            if (response.ok) {
-                const data = await response.json();
-                if (data.geonames && data.geonames.length > 0) {
-                    const businesses = data.geonames.map(item => ({
-                        name: item.name || 'Bilinmeyen İşletme',
-                        address: `${item.adminName1 || ''}, ${item.countryName || ''}`.trim(),
-                        phone: 'Bulunamadı',
-                        website: 'Bulunamadı',
-                        email: 'Bulunamadı',
-                        source: 'Geonames'
-                    })).filter(b => b.name !== 'Bilinmeyen İşletme');
-                    
-                    return businesses.length > 0 ? businesses : null;
-                }
-            }
-            return null;
-        } catch (error) {
-            console.error('Geonames API hatası:', error);
-            return null;
-        }
-    }
-
-    // Wikipedia Business API
-    async tryWikipediaBusinessAPI(keyword, city, country) {
-        try {
-            const queries = [
-                `${keyword} ${city}`,
-                `${keyword} ${country}`,
-                `${city} ${keyword}`
-            ];
-
-            for (const query of queries) {
-                try {
-                    const url = `https://tr.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(query)}`;
-                    const response = await fetch(url);
-                    
-                    if (response.ok) {
-                        const data = await response.json();
-                        if (data && data.extract && !data.extract.includes('may refer to')) {
-                            return [{
-                                name: data.title || query,
-                                address: `${city || ''}, ${country}`.trim(),
-                                phone: 'Bulunamadı',
-                                website: data.content_urls?.desktop?.page || 'Bulunamadı',
-                                email: 'Bulunamadı',
-                                source: 'Wikipedia'
-                            }];
-                        }
-                    }
-                } catch (error) {
-                    console.log(`Wikipedia query failed: ${query}`);
-                }
-            }
-            
-            return null;
-        } catch (error) {
-            console.error('Wikipedia API hatası:', error);
-            return null;
-        }
-    }
+}

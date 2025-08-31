@@ -1,0 +1,5 @@
+# JavaScript syntax hatası düzeltildi
+
+git add .
+git commit -m "JavaScript syntax hatası düzeltildi - Şehir listesi HTML'de eklendi"
+git push
