@@ -548,7 +548,6 @@ class GoogleMapsScraperWeb {
             return null;
         }
     }
-    }
 
     // Foursquare Places API (ücretsiz)
     async tryFoursquareAPI(keyword, city, country) {
