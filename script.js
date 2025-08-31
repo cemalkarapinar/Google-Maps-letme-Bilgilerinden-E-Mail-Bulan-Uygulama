@@ -305,12 +305,16 @@ class GoogleMapsScraperWeb {
             const location = city ? `${city}, ${country}` : country;
             const query = `${keyword} ${location}`;
             
-            // Birden fazla endpoint dene
+            // Şehir odaklı endpoint'ler
             const endpoints = [
                 `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&addressdetails=1&limit=15&extratags=1`,
-                `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(keyword)}&countrycodes=tr&format=json&addressdetails=1&limit=15&extratags=1`,
                 `https://photon.komoot.io/api/?q=${encodeURIComponent(query)}&limit=15`
             ];
+            
+            // Eğer şehir belirtilmişse, şehir-spesifik arama da ekle
+            if (city) {
+                endpoints.push(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(keyword)}&city=${encodeURIComponent(city)}&countrycodes=tr&format=json&addressdetails=1&limit=15&extratags=1`);
+            }
             
             for (const url of endpoints) {
                 try {
@@ -336,7 +340,8 @@ class GoogleMapsScraperWeb {
                                     phone: item.properties?.phone || 'Bulunamadı',
                                     website: item.properties?.website || 'Bulunamadı',
                                     email: item.properties?.email || 'Bulunamadı',
-                                    source: 'Photon API'
+                                    source: 'Photon API',
+                                    city: item.properties?.city || item.properties?.state || ''
                                 })) || [];
                             } else {
                                 // Nominatim format
@@ -351,11 +356,19 @@ class GoogleMapsScraperWeb {
                             }
                             
                             // Geçerli işletmeleri filtrele
-                            const validBusinesses = businesses.filter(b => 
+                            let validBusinesses = businesses.filter(b => 
                                 b.name !== 'Bilinmeyen İşletme' && 
                                 b.name.length > 2 &&
                                 !b.name.includes('undefined')
                             );
+                            
+                            // Şehir filtresi uygula
+                            if (city) {
+                                validBusinesses = validBusinesses.filter(b => 
+                                    b.address.toLowerCase().includes(city.toLowerCase()) ||
+                                    b.name.toLowerCase().includes(city.toLowerCase())
+                                );
+                            }
                             
                             if (validBusinesses.length > 0) {
                                 console.log(`OSM API başarılı: ${validBusinesses.length} işletme bulundu`);
@@ -471,13 +484,14 @@ class GoogleMapsScraperWeb {
                 return mapboxData;
             }
 
-            // 4. Web scraping (gelişmiş proxy'lerle)
-            const query = `${keyword} ${city} ${country}`.trim();
+            // 4. Web scraping (şehir odaklı)
+            const query = city ? `${keyword} ${city} ${country}` : `${keyword} ${country}`;
             const corsProxies = [
                 'https://api.codetabs.com/v1/proxy?quest=',
-                'https://thingproxy.freeboard.io/fetch/',
-                'https://cors-anywhere.herokuapp.com/',
-                'https://api.allorigins.win/get?url='
+                'https://api.allorigins.win/get?url=',
+                // Diğer proxy'ler geçici olarak devre dışı (sertifika/erişim sorunları)
+                // 'https://thingproxy.freeboard.io/fetch/',
+                // 'https://cors-anywhere.herokuapp.com/',
             ];
             
             for (const proxy of corsProxies) {
@@ -502,7 +516,7 @@ class GoogleMapsScraperWeb {
                         }
                         
                         if (html) {
-                            const businesses = this.parseGoogleSearchResults(html);
+                            const businesses = this.parseGoogleSearchResults(html, city);
                             if (businesses.length > 0) {
                                 console.log(`Web scraping başarılı: ${businesses.length} işletme`);
                                 return businesses;
@@ -559,7 +573,7 @@ class GoogleMapsScraperWeb {
         }
     }
 
-    parseGoogleSearchResults(html) {
+    parseGoogleSearchResults(html, city = null) {
         const businesses = [];
         const parser = new DOMParser();
         const doc = parser.parseFromString(html, 'text/html');
@@ -608,7 +622,12 @@ class GoogleMapsScraperWeb {
                 }
                 
                 if (business.name.length > 3 && !business.name.includes('...')) {
-                    businesses.push(business);
+                    // Şehir filtresi uygula
+                    if (!city || 
+                        business.name.toLowerCase().includes(city.toLowerCase()) ||
+                        (snippetEl && snippetEl.textContent.toLowerCase().includes(city.toLowerCase()))) {
+                        businesses.push(business);
+                    }
                 }
             }
         });
@@ -675,12 +694,13 @@ class GoogleMapsScraperWeb {
                 url = 'https://' + url;
             }
             
-            // Farklı CORS proxy'leri dene
+            // Çalışan CORS proxy'leri (güncel liste)
             const corsProxies = [
                 'https://api.codetabs.com/v1/proxy?quest=',
-                'https://cors-anywhere.herokuapp.com/',
-                'https://thingproxy.freeboard.io/fetch/',
-                'https://api.allorigins.win/get?url='
+                'https://api.allorigins.win/get?url=',
+                // Diğer proxy'ler geçici olarak devre dışı (sertifika/erişim sorunları)
+                // 'https://cors-anywhere.herokuapp.com/',
+                // 'https://thingproxy.freeboard.io/fetch/',
             ];
             
             for (const proxy of corsProxies) {
