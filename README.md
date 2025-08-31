@@ -8,9 +8,9 @@ Google Maps'ten işletme bilgilerini otomatik olarak toplayan modern web uygulam
 
 ## ✨ Özellikler
 
-### 🌐 Web Uygulaması (GitHub Pages)
-- 🔍 **Çoklu API Entegrasyonu**: OpenStreetMap, Photon, Wikipedia API'leri
-- 🌍 **Akıllı Veri Toplama**: 4 farklı CORS proxy ile web scraping
+### 🌐 Web Uygulaması (Ana Platform)
+- 🔍 **Gerçek Veri Toplama**: OpenStreetMap, Photon, Wikipedia API'leri
+- 🌍 **Akıllı Web Scraping**: 4 farklı CORS proxy ile Google arama sonuçları
 - 📧 **Website E-mail Arama**: Otomatik e-mail adresi çıkarma
 - 📊 **Gerçek Zamanlı Arama**: Canlı ilerleme takibi ve süre gösterimi
 - 📱 **Responsive Tasarım**: Tüm cihazlarda mükemmel görünüm
@@ -20,20 +20,20 @@ Google Maps'ten işletme bilgilerini otomatik olarak toplayan modern web uygulam
 
 ### 🔧 Chrome Extension (Opsiyonel)
 - 🗺️ **Google Maps Entegrasyonu**: Direkt Google Maps'ten veri çekme
-- 📊 **Gerçek Veri**: DOM'dan gerçek işletme bilgileri
+- 📊 **DOM Scraping**: Tarayıcı DOM'undan işletme bilgileri
 - 📥 **Otomatik İndirme**: CSV formatında anında indirme
 
 ## 🎯 GitHub Pages'de Kullanım
 
-### 🌐 Web Uygulaması (Ana Özellik)
+### 🌐 Web Uygulaması (Ana Platform)
 ✅ **Direkt Kullanım**: Tarayıcınızda hemen çalışır, kurulum gerektirmez
-✅ **Gerçek Veri**: OpenStreetMap, Photon API'leri ile gerçek işletme bilgileri
-✅ **Web Scraping**: 4 farklı proxy ile Google arama sonuçlarından veri çekme
+✅ **Gerçek İşletme Verileri**: OpenStreetMap, Photon API'leri ile canlı veriler
+✅ **Akıllı Web Scraping**: 4 farklı proxy ile Google arama sonuçlarından veri
 ✅ **E-mail Bulma**: Website'lerden otomatik e-mail adresi çıkarma
-✅ **Export**: Excel, CSV, PDF formatlarında indirme
+✅ **Profesyonel Export**: Excel, CSV, PDF formatlarında indirme
 
 ### 🔧 Chrome Extension (Opsiyonel)
-⚠️ **Gelişmiş Kullanım**: Google Maps'ten direkt veri çekme için
+⚠️ **Alternatif Yöntem**: Google Maps'ten direkt DOM scraping için
 1. **Extension İndir**: Web uygulamasında "Extension Yükle" butonuna tıklayın
 2. **Chrome'a Yükle**: 
    - `chrome://extensions/` adresine gidin
@@ -86,7 +86,7 @@ open http://localhost:3001
 ### 🔧 Chrome Extension (Opsiyonel)
 - **Manifest V3**: En güncel Chrome extension standardı
 - **Content Scripts**: Google Maps sayfasında çalışır
-- **Real Scraping**: Gerçek DOM'dan veri çeker
+- **DOM Scraping**: Tarayıcı DOM'undan veri çeker
 - **Auto Download**: CSV formatında otomatik indirme
 
 ### 🖥️ Backend (Yerel Geliştirme)
