@@ -18,10 +18,7 @@ Google Maps'ten işletme bilgilerini otomatik olarak toplayan modern web uygulam
 - 🇹🇷 **Türkçe Destek**: Tam Türkçe arayüz ve şehir listesi
 - ⚡ **Hızlı ve Güvenli**: HTTPS, CORS uyumlu, favicon destekli
 
-### 🔧 Chrome Extension (Opsiyonel)
-- 🗺️ **Google Maps Entegrasyonu**: Direkt Google Maps'ten veri çekme
-- 📊 **DOM Scraping**: Tarayıcı DOM'undan işletme bilgileri
-- 📥 **Otomatik İndirme**: CSV formatında anında indirme
+
 
 ## 🎯 GitHub Pages'de Kullanım
 
@@ -32,30 +29,18 @@ Google Maps'ten işletme bilgilerini otomatik olarak toplayan modern web uygulam
 ✅ **E-mail Bulma**: Website'lerden otomatik e-mail adresi çıkarma
 ✅ **Profesyonel Export**: Excel, CSV, PDF formatlarında indirme
 
-### 🔧 Chrome Extension (Opsiyonel)
-⚠️ **Alternatif Yöntem**: Google Maps'ten direkt DOM scraping için
-1. **Extension İndir**: Web uygulamasında "Extension Yükle" butonuna tıklayın
-2. **Chrome'a Yükle**: 
-   - `chrome://extensions/` adresine gidin
-   - "Geliştirici modu"nu açın
-   - "Paketlenmemiş öğe yükle" ile klasörü seçin
-3. **Kullan**: Google Maps'te arama yapın ve "📊 Verileri Topla" butonuna tıklayın
+### 🔧 Chrome Extension (İsteğe Bağlı)
+Alternatif olarak Google Maps'ten direkt veri çekmek için Chrome extension da mevcuttur.
 
-## 🛠️ Yerel Kurulum (Opsiyonel)
+## 🛠️ Yerel Geliştirme (İsteğe Bağlı)
 
 ```bash
 # Projeyi klonlayın
 git clone https://github.com/cemalkarapinar/Google-Maps-letme-Bilgilerinden-E-Mail-Bulan-Uygulama.git
 cd Google-Maps-letme-Bilgilerinden-E-Mail-Bulan-Uygulama
 
-# Bağımlılıkları yükleyin
-npm install
-
-# Backend sunucuyu başlatın (gerçek scraping için)
-npm start
-
-# Tarayıcıda açın
-open http://localhost:3001
+# Direkt index.html'i açın veya yerel sunucu çalıştırın
+npm install && npm start
 ```
 
 ## 📋 Kullanım Kılavuzu
@@ -65,11 +50,8 @@ open http://localhost:3001
 2. **Demo Test**: "Aramayı Başlat" ile demo verileri görün
 3. **Export**: Verileri istediğiniz formatta indirin
 
-### Chrome Extension (Gerçek Veri)
-1. **Google Maps**: [maps.google.com](https://maps.google.com) açın
-2. **Arama**: İstediğiniz kelimeyi arayın (örn: "restoran istanbul")
-3. **Topla**: Sağ üstteki "📊 Verileri Topla" butonuna tıklayın
-4. **İndir**: Otomatik olarak CSV dosyası indirilir
+### Chrome Extension (İsteğe Bağlı)
+Chrome extension ile Google Maps'ten direkt veri çekme de mümkündür.
 
 ## 🔧 Teknik Özellikler
 
@@ -83,11 +65,7 @@ open http://localhost:3001
 - **HTTPS Uyumlu**: Güvenli bağlantılar, mixed content yok
 - **Favicon**: SVG format ile modern icon desteği
 
-### 🔧 Chrome Extension (Opsiyonel)
-- **Manifest V3**: En güncel Chrome extension standardı
-- **Content Scripts**: Google Maps sayfasında çalışır
-- **DOM Scraping**: Tarayıcı DOM'undan veri çeker
-- **Auto Download**: CSV formatında otomatik indirme
+
 
 ### 🖥️ Backend (Yerel Geliştirme)
 - **Node.js + Express**: RESTful API
