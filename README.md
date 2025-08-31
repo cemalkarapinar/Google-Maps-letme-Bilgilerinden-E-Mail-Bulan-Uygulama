@@ -8,22 +8,32 @@ Google Maps'ten işletme bilgilerini otomatik olarak toplayan modern web uygulam
 
 ## ✨ Özellikler
 
-- 🔍 **Gerçek Veri Toplama**: Chrome Extension ile Google Maps'ten gerçek veriler
-- 📊 **Akıllı Arama**: Anahtar kelime, ülke ve şehir bazlı filtreleme
-- 📧 **E-mail Bulma**: İşletme websitelerinden otomatik e-mail çıkarma
+### 🌐 Web Uygulaması (GitHub Pages)
+- 🔍 **Çoklu API Entegrasyonu**: OpenStreetMap, Photon, Wikipedia API'leri
+- 🌍 **Akıllı Veri Toplama**: 4 farklı CORS proxy ile web scraping
+- 📧 **Website E-mail Arama**: Otomatik e-mail adresi çıkarma
+- 📊 **Gerçek Zamanlı Arama**: Canlı ilerleme takibi ve süre gösterimi
 - 📱 **Responsive Tasarım**: Tüm cihazlarda mükemmel görünüm
 - 📄 **Çoklu Export**: Excel, CSV, PDF, Word formatlarında indirme
-- ⏱️ **Gerçek Zamanlı**: Canlı ilerleme takibi ve süre gösterimi
-- 📧 **Toplu Mail**: Webmail entegrasyonu ile toplu e-mail gönderme
+- 🇹🇷 **Türkçe Destek**: Tam Türkçe arayüz ve şehir listesi
+- ⚡ **Hızlı ve Güvenli**: HTTPS, CORS uyumlu, favicon destekli
+
+### 🔧 Chrome Extension (Opsiyonel)
+- 🗺️ **Google Maps Entegrasyonu**: Direkt Google Maps'ten veri çekme
+- 📊 **Gerçek Veri**: DOM'dan gerçek işletme bilgileri
+- 📥 **Otomatik İndirme**: CSV formatında anında indirme
 
 ## 🎯 GitHub Pages'de Kullanım
 
-### 1. Web Uygulaması
-- Direkt tarayıcınızda çalışır
-- Demo verilerle test edebilirsiniz
-- Temel özellikleri deneyimleyin
+### 🌐 Web Uygulaması (Ana Özellik)
+✅ **Direkt Kullanım**: Tarayıcınızda hemen çalışır, kurulum gerektirmez
+✅ **Gerçek Veri**: OpenStreetMap, Photon API'leri ile gerçek işletme bilgileri
+✅ **Web Scraping**: 4 farklı proxy ile Google arama sonuçlarından veri çekme
+✅ **E-mail Bulma**: Website'lerden otomatik e-mail adresi çıkarma
+✅ **Export**: Excel, CSV, PDF formatlarında indirme
 
-### 2. Chrome Extension (Gerçek Veri İçin)
+### 🔧 Chrome Extension (Opsiyonel)
+⚠️ **Gelişmiş Kullanım**: Google Maps'ten direkt veri çekme için
 1. **Extension İndir**: Web uygulamasında "Extension Yükle" butonuna tıklayın
 2. **Chrome'a Yükle**: 
    - `chrome://extensions/` adresine gidin
@@ -63,19 +73,23 @@ open http://localhost:3001
 
 ## 🔧 Teknik Özellikler
 
-### Frontend
-- **Vanilla JavaScript**: Framework bağımsız, hızlı
-- **Modern CSS**: Flexbox, Grid, CSS Variables
+### 🌐 Web Uygulaması (Ana Platform)
+- **Vanilla JavaScript**: Framework bağımsız, hızlı ve güvenilir
+- **Modern CSS**: Flexbox, Grid, CSS Variables ile responsive tasarım
+- **API Entegrasyonu**: OpenStreetMap Nominatim, Photon, Wikipedia API'leri
+- **CORS Proxy**: 4 farklı proxy ile web scraping (allorigins, codetabs, thingproxy, cors-anywhere)
+- **Export Libraries**: XLSX, jsPDF, html2canvas ile çoklu format desteği
 - **Progressive Enhancement**: Temel işlevsellik her yerde çalışır
-- **Export Libraries**: XLSX, jsPDF, html2canvas
+- **HTTPS Uyumlu**: Güvenli bağlantılar, mixed content yok
+- **Favicon**: SVG format ile modern icon desteği
 
-### Chrome Extension
+### 🔧 Chrome Extension (Opsiyonel)
 - **Manifest V3**: En güncel Chrome extension standardı
 - **Content Scripts**: Google Maps sayfasında çalışır
 - **Real Scraping**: Gerçek DOM'dan veri çeker
 - **Auto Download**: CSV formatında otomatik indirme
 
-### Backend (Opsiyonel)
+### 🖥️ Backend (Yerel Geliştirme)
 - **Node.js + Express**: RESTful API
 - **Puppeteer**: Headless browser automation
 - **Streaming**: Server-Sent Events ile gerçek zamanlı veri
@@ -104,11 +118,19 @@ git push origin gh-pages
 
 ## 🔒 Güvenlik ve Uyumluluk
 
-- ✅ **CORS Friendly**: Cross-origin istekler desteklenir
-- ✅ **Rate Limited**: Aşırı kullanımı önler
-- ✅ **Input Validation**: Güvenli veri işleme
-- ✅ **Error Handling**: Kapsamlı hata yönetimi
-- ⚠️ **Sorumluluk**: Google ToS'a uygun kullanım gereklidir
+### ✅ Güvenlik Özellikleri
+- **HTTPS Only**: Tüm API çağrıları güvenli bağlantı ile
+- **CORS Proxy**: 4 farklı proxy ile güvenli cross-origin istekler
+- **Input Validation**: Güvenli veri işleme ve sanitization
+- **Error Handling**: Kapsamlı hata yönetimi ve fallback sistemleri
+- **Rate Limiting**: API'lere aşırı yük binmesini önler
+- **No Mixed Content**: HTTP/HTTPS karışık içerik sorunu yok
+
+### ⚖️ Yasal Uyumluluk
+- **API ToS**: OpenStreetMap, Wikipedia API kullanım şartlarına uygun
+- **Fair Use**: Makul kullanım sınırları içinde
+- **Privacy**: Kişisel veri koruma önlemleri
+- ⚠️ **Sorumluluk**: Kullanıcı sorumluluğunda uygun kullanım
 
 ## 📊 Desteklenen Veri Formatları
 
@@ -138,6 +160,23 @@ Bu araç eğitim ve araştırma amaçlıdır. Kullanırken:
 - Makul kullanım sınırlarını aşmayın
 - Kişisel verileri koruyun
 - Ticari kullanım için izin alın
+
+## 🆕 Son Güncellemeler (v2.1)
+
+### ✅ Düzeltilen Sorunlar
+- **HTTPS Sorunları**: Tüm API çağrıları güvenli bağlantıya çevrildi
+- **CORS Hataları**: 4 farklı proxy ile cross-origin sorunları çözüldü
+- **Favicon 404**: SVG favicon eklendi, 404 hatası giderildi
+- **Mixed Content**: HTTP/HTTPS karışık içerik sorunu çözüldü
+
+### 🚀 Yeni Özellikler
+- **Gelişmiş Web Scraping**: 4 proxy ile Google arama sonuçlarından veri çekme
+- **Akıllı E-mail Arama**: Website'lerden otomatik e-mail bulma
+- **API Optimizasyonu**: OpenStreetMap ve Photon API'leri optimize edildi
+- **Hata Toleransı**: Gelişmiş fallback sistemleri
+
+### 📅 Güncelleme Tarihi
+**Son Güncelleme**: 31 Ağustos 2025
 
 ---
 
