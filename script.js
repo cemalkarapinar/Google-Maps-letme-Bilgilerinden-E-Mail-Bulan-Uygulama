@@ -512,33 +512,34 @@ class GoogleMapsScraperWeb {
                         const searchUrl = `https://www.google.com/search?q=${encodeURIComponent(searchQuery + ' telefon adres email')}`;
                         const proxyUrl = proxy + encodeURIComponent(searchUrl);
                     
-                    const response = await fetch(proxyUrl, {
-                        headers: {
-                            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-                        },
-                        timeout: 10000
-                    });
-                    
-                    if (response.ok) {
-                        let html;
-                        if (proxy.includes('allorigins')) {
-                            const json = await response.json();
-                            html = json.contents;
-                        } else {
-                            html = await response.text();
-                        }
+                        const response = await fetch(proxyUrl, {
+                            headers: {
+                                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+                            },
+                            timeout: 10000
+                        });
                         
-                        if (html) {
-                            const businesses = this.parseGoogleSearchResults(html, city);
-                            if (businesses.length > 0) {
-                                console.log(`Web scraping başarılı: ${businesses.length} işletme (${searchQuery})`);
-                                return businesses;
+                        if (response.ok) {
+                            let html;
+                            if (proxy.includes('allorigins')) {
+                                const json = await response.json();
+                                html = json.contents;
+                            } else {
+                                html = await response.text();
+                            }
+                            
+                            if (html) {
+                                const businesses = this.parseGoogleSearchResults(html, city);
+                                if (businesses.length > 0) {
+                                    console.log(`Web scraping başarılı: ${businesses.length} işletme (${searchQuery})`);
+                                    return businesses;
+                                }
                             }
                         }
+                    } catch (error) {
+                        console.log(`Proxy ${proxy} çalışmadı:`, error);
+                        continue;
                     }
-                } catch (error) {
-                    console.log(`Proxy ${proxy} çalışmadı:`, error);
-                    continue;
                 }
             }
             
