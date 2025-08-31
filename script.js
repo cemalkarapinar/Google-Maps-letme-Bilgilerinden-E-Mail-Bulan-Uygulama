@@ -8,10 +8,22 @@ class GoogleMapsScraperWeb {
         this.webmailSettings = this.loadWebmailSettings();
         this.mailTemplates = this.loadMailTemplates();
         
+        // DOM hazır olana kadar bekle
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                this.initialize();
+            });
+        } else {
+            this.initialize();
+        }
+    }
+
+    initialize() {
         this.initializeElements();
         this.setupEventListeners();
         this.loadTurkishCities();
         this.updateStatistics();
+        console.log('Google Maps Scraper başarıyla başlatıldı');
     }
 
     initializeElements() {
@@ -96,12 +108,30 @@ class GoogleMapsScraperWeb {
             "Yalova", "Karabük", "Kilis", "Osmaniye", "Düzce"
         ].sort();
 
+        // Güvenli şehir yükleme
+        const citySelect = this.elements.city || document.getElementById('city');
+        if (!citySelect) {
+            console.error('Şehir select elementi bulunamadı!');
+            return;
+        }
+
+        // Mevcut seçenekleri temizle (Tüm şehirler hariç)
+        const options = citySelect.querySelectorAll('option');
+        options.forEach((option, index) => {
+            if (index > 0) { // İlk option'ı (Tüm şehirler) koru
+                option.remove();
+            }
+        });
+
+        // Şehirleri ekle
         cities.forEach(city => {
             const option = document.createElement('option');
             option.value = city;
             option.textContent = city;
-            this.elements.city.appendChild(option);
+            citySelect.appendChild(option);
         });
+
+        console.log(`${cities.length} şehir yüklendi`);
     }
 
     updateStatus(message) {
@@ -962,12 +992,24 @@ function exportToWord(data, emailOnly) {
     URL.revokeObjectURL(url);
 }
 
-// App'i başlat
-window.addEventListener('DOMContentLoaded', () => {
-    console.log('DOM yüklendi, app başlatılıyor...');
-    window.app = new GoogleMapsScraperWeb();
-    console.log('App global olarak erişilebilir: window.app');
-});    
+// App'i başlat - Güvenli başlatma
+function initializeApp() {
+    try {
+        console.log('DOM yüklendi, app başlatılıyor...');
+        window.app = new GoogleMapsScraperWeb();
+        console.log('App global olarak erişilebilir: window.app');
+    } catch (error) {
+        console.error('App başlatma hatası:', error);
+        // 1 saniye sonra tekrar dene
+        setTimeout(initializeApp, 1000);
+    }
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeApp);
+} else {
+    initializeApp();
+}    
 // Yeni güçlü gerçek veri çekme sistemi
     async tryRealBusinessData(keyword, country, city) {
         try {
