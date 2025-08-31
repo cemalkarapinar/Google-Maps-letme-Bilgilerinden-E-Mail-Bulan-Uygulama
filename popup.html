@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body { width: 300px; padding: 20px; font-family: Arial; }
+        .btn { padding: 10px; margin: 5px 0; width: 100%; background: #4285f4; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        .btn:hover { background: #3367d6; }
+        input { width: 100%; padding: 8px; margin: 5px 0; border: 1px solid #ddd; border-radius: 4px; }
+        #status { margin: 10px 0; padding: 10px; background: #f0f0f0; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <h3>🗺️ Maps Scraper</h3>
+    
+    <input type="text" id="keyword" placeholder="Aranacak kelime (örn: restoran)">
+    <input type="text" id="location" placeholder="Konum (örn: İstanbul)">
+    
+    <button class="btn" id="startScraping">Aramayı Başlat</button>
+    <button class="btn" id="exportData">Verileri İndir</button>
+    
+    <div id="status">Hazır</div>
+    <div id="results"></div>
+
+    <script src="popup.js"></script>
+</body>
+</html>

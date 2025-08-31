@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Maps İşletme Bilgi Toplayıcı - Gerçek Veri</title>
+    <meta name="description"
+        content="Google Maps'ten gerçek işletme bilgilerini toplayan web uygulaması. E-mail adresleri, telefon numaraları ve adres bilgileri.">
+    <meta name="keywords" content="google maps, işletme bilgileri, e-mail bulma, web scraping, openstreetmap">
+    <meta name="author" content="Cemal Karapınar">
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-map-marker-alt"></i> Google Maps İşletme Bilgi Toplayıcı</h1>
+            <p>Web tabanlı işletme bilgi toplama aracı</p>
+        </header>
+
+        <div class="form-section">
+            <div class="form-group">
+                <label for="keyword">Aranacak Kelime:</label>
+                <input type="text" id="keyword" placeholder="Örn: restoran, kuaför, eczane">
+            </div>
+
+            <div class="form-group">
+                <label for="country">Aranacak Ülke:</label>
+                <input type="text" id="country" value="Türkiye">
+            </div>
+
+            <div class="form-group">
+                <label for="city">Aranacak Şehir (isteğe bağlı):</label>
+                <select id="city">
+                    <option value="">Tüm şehirler</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="button-section">
+            <button id="startBtn" class="btn btn-primary">
+                <i class="fas fa-play"></i> Aramayı Başlat
+            </button>
+            <button id="stopBtn" class="btn btn-danger" disabled>
+                <i class="fas fa-stop"></i> Durdur
+            </button>
+
+            <button id="webmailBtn" class="btn btn-secondary">
+                <i class="fas fa-cog"></i> Webmail Ayarları
+            </button>
+            <button id="templateBtn" class="btn btn-secondary">
+                <i class="fas fa-envelope"></i> Mail Şablonları
+            </button>
+            <button id="sendMailBtn" class="btn btn-success" disabled>
+                <i class="fas fa-paper-plane"></i> Mail Gönder
+            </button>
+        </div>
+
+        <div class="status-section">
+            <div id="status" class="status">Durum: Beklemede</div>
+            <div id="stats" class="stats">Toplam İşletme: 0 | E-mail Bulunan: 0</div>
+            <button onclick="testFunction()" style="margin-top: 10px; padding: 5px 10px;">Test Butonu</button>
+        </div>
+
+        <script>
+            function testFunction() {
+                console.log('Test butonu çalışıyor!');
+                alert('JavaScript çalışıyor!');
+
+                // App kontrolü
+                if (window.app) {
+                    console.log('App mevcut:', window.app);
+                    window.app.updateStatus('Test başarılı!');
+                } else {
+                    console.log('App henüz yüklenmedi');
+                }
+            }
+        </script>
+
+        <div class="table-section">
+            <div class="table-container">
+                <table id="businessTable">
+                    <thead>
+                        <tr>
+                            <th>İşletme Adı</th>
+                            <th>E-Mail Adresi</th>
+                            <th>Web Sitesi</th>
+                            <th>Adres</th>
+                            <th>Telefon Numarası</th>
+                            <th>İşlemler</th>
+                        </tr>
+                    </thead>
+                    <tbody id="businessTableBody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="export-section">
+            <div class="export-group">
+                <h3>Tüm Veriler:</h3>
+                <button class="btn btn-export" onclick="exportData('excel', false)">
+                    <i class="fas fa-file-excel"></i> Excel
+                </button>
+                <button class="btn btn-export" onclick="exportData('csv', false)">
+                    <i class="fas fa-file-csv"></i> CSV
+                </button>
+                <button class="btn btn-export" onclick="exportData('pdf', false)">
+                    <i class="fas fa-file-pdf"></i> PDF
+                </button>
+                <button class="btn btn-export" onclick="exportData('word', false)">
+                    <i class="fas fa-file-word"></i> Word
+                </button>
+            </div>
+
+            <div class="export-group">
+                <h3>Sadece E-mail Bulunanlar:</h3>
+                <button class="btn btn-export" onclick="exportData('excel', true)">
+                    <i class="fas fa-file-excel"></i> Excel
+                </button>
+                <button class="btn btn-export" onclick="exportData('csv', true)">
+                    <i class="fas fa-file-csv"></i> CSV
+                </button>
+                <button class="btn btn-export" onclick="exportData('pdf', true)">
+                    <i class="fas fa-file-pdf"></i> PDF
+                </button>
+                <button class="btn btn-export" onclick="exportData('word', true)">
+                    <i class="fas fa-file-word"></i> Word
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for settings -->
+    <div id="settingsModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Webmail Ayarları</h2>
+            <form id="webmailForm">
+                <div class="form-group">
+                    <label for="smtpServer">SMTP Sunucu:</label>
+                    <input type="text" id="smtpServer" placeholder="smtp.gmail.com">
+                </div>
+                <div class="form-group">
+                    <label for="smtpPort">Port:</label>
+                    <input type="number" id="smtpPort" value="587">
+                </div>
+                <div class="form-group">
+                    <label for="emailUser">E-mail:</label>
+                    <input type="email" id="emailUser" placeholder="your-email@gmail.com">
+                </div>
+                <div class="form-group">
+                    <label for="emailPass">Şifre:</label>
+                    <input type="password" id="emailPass" placeholder="Uygulama şifresi">
+                </div>
+                <button type="submit" class="btn btn-primary">Kaydet</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal for mail templates -->
+    <div id="templateModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Mail Şablonları</h2>
+            <div class="form-group">
+                <label for="mailSubject">Konu:</label>
+                <input type="text" id="mailSubject" placeholder="İş birliği teklifi">
+            </div>
+            <div class="form-group">
+                <label for="mailTemplate">Mail İçeriği:</label>
+                <textarea id="mailTemplate" rows="10"
+                    placeholder="Merhaba,&#10;&#10;İşletmenizle iş birliği yapmak istiyoruz..."></textarea>
+            </div>
+            <button class="btn btn-primary" onclick="saveTemplate()">Şablonu Kaydet</button>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="script.js"></script>
+</body>
+
+</html>

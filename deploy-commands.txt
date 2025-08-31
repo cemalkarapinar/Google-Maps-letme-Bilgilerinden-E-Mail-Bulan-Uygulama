@@ -1,0 +1,22 @@
+# GitHub'a yükleme komutları
+
+# 1. Git repository'sini başlat
+git init
+
+# 2. Tüm dosyaları ekle
+git add .
+
+# 3. İlk commit'i yap
+git commit -m "Initial commit: Google Maps İşletme Bilgi Toplayıcı - Gerçek veri desteği"
+
+# 4. GitHub repository'sini remote olarak ekle
+git remote add origin https://github.com/cemalkarapinar/Google-Maps-letme-Bilgilerinden-E-Mail-Bulan-Uygulama.git
+
+# 5. Main branch'e push et
+git branch -M main
+git push -u origin main
+
+# Sonraki güncellemeler için:
+# git add .
+# git commit -m "Güncelleme açıklaması"
+# git push

@@ -1,0 +1,25 @@
+{
+  "manifest_version": 3,
+  "name": "Google Maps Scraper",
+  "version": "1.0",
+  "description": "Google Maps işletme bilgilerini toplar",
+  "permissions": [
+    "activeTab",
+    "scripting",
+    "storage"
+  ],
+  "host_permissions": [
+    "https://www.google.com/*",
+    "https://maps.google.com/*"
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Maps Scraper"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://www.google.com/maps*"],
+      "js": ["content.js"]
+    }
+  ]
+}
