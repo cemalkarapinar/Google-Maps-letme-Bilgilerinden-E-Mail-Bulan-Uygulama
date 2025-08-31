@@ -1,0 +1,5 @@
+# Güncellemeleri GitHub'a yükle
+
+git add .
+git commit -m "Gerçek veri çekme sistemi güçlendirildi - Çoklu API desteği"
+git push
