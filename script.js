@@ -311,9 +311,9 @@ class GoogleMapsScraperWeb {
                 `https://photon.komoot.io/api/?q=${encodeURIComponent(query)}&limit=15`
             ];
             
-            // Eğer şehir belirtilmişse, şehir-spesifik arama da ekle
+            // Eğer şehir belirtilmişse, alternatif arama da ekle (city parametresi yerine query'de)
             if (city) {
-                endpoints.push(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(keyword)}&city=${encodeURIComponent(city)}&countrycodes=tr&format=json&addressdetails=1&limit=15&extratags=1`);
+                endpoints.push(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(keyword + ' ' + city)}&countrycodes=tr&format=json&addressdetails=1&limit=15&extratags=1`);
             }
             
             for (const url of endpoints) {
@@ -362,12 +362,20 @@ class GoogleMapsScraperWeb {
                                 !b.name.includes('undefined')
                             );
                             
-                            // Şehir filtresi uygula
-                            if (city) {
-                                validBusinesses = validBusinesses.filter(b => 
+                            // Şehir filtresi uygula (esnek)
+                            if (city && validBusinesses.length > 0) {
+                                const cityFiltered = validBusinesses.filter(b => 
                                     b.address.toLowerCase().includes(city.toLowerCase()) ||
                                     b.name.toLowerCase().includes(city.toLowerCase())
                                 );
+                                
+                                // Eğer şehir filtresi sonuç verirse kullan, yoksa tüm sonuçları al
+                                if (cityFiltered.length > 0) {
+                                    validBusinesses = cityFiltered;
+                                    console.log(`Şehir filtresi uygulandı: ${cityFiltered.length}/${validBusinesses.length} sonuç`);
+                                } else {
+                                    console.log(`Şehir filtresi sonuç vermedi, tüm sonuçlar gösteriliyor: ${validBusinesses.length}`);
+                                }
                             }
                             
                             if (validBusinesses.length > 0) {
@@ -622,15 +630,26 @@ class GoogleMapsScraperWeb {
                 }
                 
                 if (business.name.length > 3 && !business.name.includes('...')) {
-                    // Şehir filtresi uygula
-                    if (!city || 
-                        business.name.toLowerCase().includes(city.toLowerCase()) ||
-                        (snippetEl && snippetEl.textContent.toLowerCase().includes(city.toLowerCase()))) {
-                        businesses.push(business);
-                    }
+                    businesses.push(business);
                 }
             }
         });
+        
+        // Şehir filtresi uygula (esnek)
+        if (city && businesses.length > 0) {
+            const cityFiltered = businesses.filter(b => 
+                b.name.toLowerCase().includes(city.toLowerCase()) ||
+                (b.address && b.address.toLowerCase().includes(city.toLowerCase()))
+            );
+            
+            // Eğer şehir filtresi sonuç verirse kullan, yoksa tüm sonuçları al
+            if (cityFiltered.length > 0) {
+                console.log(`Google sonuçlarında şehir filtresi: ${cityFiltered.length}/${businesses.length}`);
+                return cityFiltered;
+            } else {
+                console.log(`Google sonuçlarında şehir filtresi sonuç vermedi, tüm sonuçlar: ${businesses.length}`);
+            }
+        }
         
         return businesses;
     }
