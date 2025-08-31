@@ -471,12 +471,13 @@ class GoogleMapsScraperWeb {
                 return mapboxData;
             }
 
-            // 4. Web scraping (son çare)
+            // 4. Web scraping (gelişmiş proxy'lerle)
             const query = `${keyword} ${city} ${country}`.trim();
             const corsProxies = [
-                'https://api.allorigins.win/get?url=',
-                'https://corsproxy.io/?',
-                'https://api.codetabs.com/v1/proxy?quest='
+                'https://api.codetabs.com/v1/proxy?quest=',
+                'https://thingproxy.freeboard.io/fetch/',
+                'https://cors-anywhere.herokuapp.com/',
+                'https://api.allorigins.win/get?url='
             ];
             
             for (const proxy of corsProxies) {
@@ -488,7 +489,7 @@ class GoogleMapsScraperWeb {
                         headers: {
                             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
                         },
-                        timeout: 8000
+                        timeout: 10000
                     });
                     
                     if (response.ok) {
@@ -500,14 +501,17 @@ class GoogleMapsScraperWeb {
                             html = await response.text();
                         }
                         
-                        const businesses = this.parseGoogleSearchResults(html);
-                        if (businesses.length > 0) {
-                            console.log(`Web scraping başarılı: ${businesses.length} işletme`);
-                            return businesses;
+                        if (html) {
+                            const businesses = this.parseGoogleSearchResults(html);
+                            if (businesses.length > 0) {
+                                console.log(`Web scraping başarılı: ${businesses.length} işletme`);
+                                return businesses;
+                            }
                         }
                     }
                 } catch (error) {
                     console.log(`Proxy ${proxy} çalışmadı:`, error);
+                    continue;
                 }
             }
             
@@ -671,35 +675,67 @@ class GoogleMapsScraperWeb {
                 url = 'https://' + url;
             }
             
-            const corsProxy = 'https://api.allorigins.win/get?url=';
-            const response = await fetch(corsProxy + encodeURIComponent(url), {
-                timeout: 5000
-            });
+            // Farklı CORS proxy'leri dene
+            const corsProxies = [
+                'https://api.codetabs.com/v1/proxy?quest=',
+                'https://cors-anywhere.herokuapp.com/',
+                'https://thingproxy.freeboard.io/fetch/',
+                'https://api.allorigins.win/get?url='
+            ];
             
-            if (response.ok) {
-                const data = await response.json();
-                const html = data.contents;
-                
-                const emailPatterns = [
-                    /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g,
-                    /mailto:([A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,})/gi
-                ];
-                
-                for (const pattern of emailPatterns) {
-                    const matches = html.match(pattern);
-                    if (matches) {
-                        const validEmails = matches.filter(email => {
-                            const cleanEmail = email.replace('mailto:', '').toLowerCase();
-                            return !cleanEmail.includes('noreply') && 
-                                   !cleanEmail.includes('no-reply') && 
-                                   !cleanEmail.includes('example.com') &&
-                                   !cleanEmail.includes('test.com');
-                        });
+            for (const proxy of corsProxies) {
+                try {
+                    const proxyUrl = proxy + encodeURIComponent(url);
+                    const response = await fetch(proxyUrl, {
+                        timeout: 8000,
+                        headers: {
+                            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+                        }
+                    });
+                    
+                    if (response.ok) {
+                        let html;
+                        if (proxy.includes('allorigins')) {
+                            const data = await response.json();
+                            html = data.contents;
+                        } else {
+                            html = await response.text();
+                        }
                         
-                        if (validEmails.length > 0) {
-                            return validEmails[0].replace('mailto:', '');
+                        if (html) {
+                            const emailPatterns = [
+                                /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g,
+                                /mailto:([A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,})/gi,
+                                /"email"\s*:\s*"([^"]+@[^"]+)"/gi,
+                                /'email'\s*:\s*'([^']+@[^']+)'/gi
+                            ];
+                            
+                            for (const pattern of emailPatterns) {
+                                const matches = html.match(pattern);
+                                if (matches) {
+                                    const validEmails = matches.filter(email => {
+                                        const cleanEmail = email.replace('mailto:', '').toLowerCase();
+                                        return !cleanEmail.includes('noreply') && 
+                                               !cleanEmail.includes('no-reply') && 
+                                               !cleanEmail.includes('example.com') &&
+                                               !cleanEmail.includes('test.com') &&
+                                               !cleanEmail.includes('placeholder') &&
+                                               cleanEmail.includes('@') &&
+                                               cleanEmail.includes('.');
+                                    });
+                                    
+                                    if (validEmails.length > 0) {
+                                        const foundEmail = validEmails[0].replace('mailto:', '');
+                                        console.log(`E-mail bulundu: ${foundEmail} (${url})`);
+                                        return foundEmail;
+                                    }
+                                }
+                            }
                         }
                     }
+                } catch (proxyError) {
+                    console.log(`Proxy ${proxy} başarısız:`, proxyError.message);
+                    continue;
                 }
             }
             
@@ -897,31 +933,9 @@ class GoogleMapsScraperWeb {
 
     // Geonames API
     async tryGeonamesAPI(keyword, city, country) {
-        try {
-            const query = `${keyword} ${city} ${country}`.trim();
-            const url = `http://api.geonames.org/searchJSON?q=${encodeURIComponent(query)}&maxRows=20&username=demo`;
-            
-            const response = await fetch(url);
-            if (response.ok) {
-                const data = await response.json();
-                if (data.geonames && data.geonames.length > 0) {
-                    const businesses = data.geonames.map(item => ({
-                        name: item.name || 'Bilinmeyen İşletme',
-                        address: `${item.adminName1 || ''}, ${item.countryName || ''}`.trim(),
-                        phone: 'Bulunamadı',
-                        website: 'Bulunamadı',
-                        email: 'Bulunamadı',
-                        source: 'Geonames'
-                    })).filter(b => b.name !== 'Bilinmeyen İşletme');
-                    
-                    return businesses.length > 0 ? businesses : null;
-                }
-            }
-            return null;
-        } catch (error) {
-            console.error('Geonames API hatası:', error);
-            return null;
-        }
+        // Geonames API CORS ve HTTPS sorunları nedeniyle devre dışı
+        console.log('Geonames API geçici olarak devre dışı (CORS/HTTPS sorunları)');
+        return null;
     }
 
     // Wikipedia Business API
