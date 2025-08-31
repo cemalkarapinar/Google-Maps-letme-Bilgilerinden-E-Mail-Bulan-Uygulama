@@ -305,16 +305,14 @@ class GoogleMapsScraperWeb {
             const location = city ? `${city}, ${country}` : country;
             const query = `${keyword} ${location}`;
             
-            // Geniş arama endpoint'leri
+            // Orijinal çalışan endpoint'ler (bilgisayardaki gibi)
             const endpoints = [
-                // Ana arama
-                `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&addressdetails=1&limit=20&extratags=1`,
-                // Sadece anahtar kelime
-                `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(keyword)}&countrycodes=tr&format=json&addressdetails=1&limit=20&extratags=1`,
-                // Photon API
-                `https://photon.komoot.io/api/?q=${encodeURIComponent(query)}&limit=20`,
-                // Genel kategori araması
-                `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(keyword)}&format=json&addressdetails=1&limit=20&extratags=1`
+                // Şehir + anahtar kelime (en spesifik)
+                `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(keyword + ' ' + city)}&countrycodes=tr&format=json&addressdetails=1&limit=15&extratags=1`,
+                // Photon API şehir odaklı
+                `https://photon.komoot.io/api/?q=${encodeURIComponent(keyword + ' ' + city)}&limit=15`,
+                // Nominatim genel
+                `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&addressdetails=1&limit=15&extratags=1`
             ];
             
             for (const url of endpoints) {
@@ -372,12 +370,13 @@ class GoogleMapsScraperWeb {
                                     b.name.toLowerCase().includes(city.toLowerCase())
                                 );
                                 
-                                // Eğer şehir filtresi sonuç verirse kullan, yoksa tüm sonuçları al
+                                // Orijinal şehir filtresi mantığı
                                 if (cityFiltered.length > 0) {
                                     validBusinesses = cityFiltered;
-                                    console.log(`Şehir filtresi uygulandı: ${cityFiltered.length}/${validBusinesses.length} sonuç`);
+                                    console.log(`${city} şehrinde ${cityFiltered.length} işletme bulundu`);
                                 } else {
-                                    console.log(`Şehir filtresi sonuç vermedi, tüm sonuçlar gösteriliyor: ${validBusinesses.length}`);
+                                    // Şehir filtresi sonuç vermezse genel sonuçları kullan
+                                    console.log(`${city} şehrinde spesifik sonuç yok, genel sonuçlar: ${validBusinesses.length}`);
                                 }
                             }
                             
@@ -495,18 +494,23 @@ class GoogleMapsScraperWeb {
                 return mapboxData;
             }
 
-            // 4. Web scraping (şehir odaklı)
-            const query = city ? `${keyword} ${city} ${country}` : `${keyword} ${country}`;
+            // 4. Web scraping (orijinal mantık - şehir odaklı)
+            const searchQueries = [
+                `${keyword} ${city}`, // En spesifik
+                `${keyword} ${city} ${country}`, // Orta spesifik
+                `${keyword} firması ${city}`, // Alternatif
+            ];
             const corsProxies = [
                 'https://api.codetabs.com/v1/proxy?quest=',
-                // allorigins geçici olarak devre dışı (500 hatası)
-                // 'https://api.allorigins.win/get?url=',
+                'https://api.allorigins.win/get?url=', // Tekrar deneyelim
+                'https://cors-anywhere.herokuapp.com/', // Tekrar deneyelim
             ];
             
-            for (const proxy of corsProxies) {
-                try {
-                    const searchUrl = `https://www.google.com/search?q=${encodeURIComponent(query + ' telefon adres email')}`;
-                    const proxyUrl = proxy + encodeURIComponent(searchUrl);
+            for (const searchQuery of searchQueries) {
+                for (const proxy of corsProxies) {
+                    try {
+                        const searchUrl = `https://www.google.com/search?q=${encodeURIComponent(searchQuery + ' telefon adres email')}`;
+                        const proxyUrl = proxy + encodeURIComponent(searchUrl);
                     
                     const response = await fetch(proxyUrl, {
                         headers: {
@@ -527,7 +531,7 @@ class GoogleMapsScraperWeb {
                         if (html) {
                             const businesses = this.parseGoogleSearchResults(html, city);
                             if (businesses.length > 0) {
-                                console.log(`Web scraping başarılı: ${businesses.length} işletme`);
+                                console.log(`Web scraping başarılı: ${businesses.length} işletme (${searchQuery})`);
                                 return businesses;
                             }
                         }
