@@ -501,9 +501,10 @@ class GoogleMapsScraperWeb {
                 `${keyword} firması ${city}`, // Alternatif
             ];
             const corsProxies = [
+                'https://corsproxy.io/?',
+                'https://proxy.cors.sh/',
                 'https://api.codetabs.com/v1/proxy?quest=',
-                'https://api.allorigins.win/get?url=', // Tekrar deneyelim
-                'https://cors-anywhere.herokuapp.com/', // Tekrar deneyelim
+                'https://thingproxy.freeboard.io/fetch/',
             ];
             
             for (const searchQuery of searchQueries) {
