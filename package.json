@@ -36,8 +36,7 @@
     "nodemon": "^3.0.2"
   },
   "engines": {
-    "node": "22.x",
-    "npm": ">=10.0.0"
+    "node": "20.x"
   },
   "repository": {
     "type": "git",
