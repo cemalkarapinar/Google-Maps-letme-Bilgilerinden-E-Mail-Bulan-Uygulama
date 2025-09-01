@@ -206,55 +206,20 @@ class GoogleMapsScraperWeb {
 
     async attemptRealDataScraping(keyword, country, city) {
         try {
-            // GitHub Pages için özel durum
-            if (window.location.hostname.includes('github.io')) {
-                console.log('GitHub Pages tespit edildi, doğrudan gerçek API\'lere geçiliyor...');
-                this.updateStatus('🔍 GitHub Pages - Gerçek API\'lerden veri çekiliyor...');
-                
-                const realBusinesses = await this.tryAdvancedRealDataScraping(keyword, country, city);
-                
-                if (realBusinesses && realBusinesses.length > 0) {
-                    this.displayRealData(realBusinesses, 'GitHub Pages - Gerçek API\'ler');
-                    
-                    this.scrapingEndTime = Date.now();
-                    const totalTime = Math.floor((this.scrapingEndTime - this.scrapingStartTime) / 1000);
-                    const minutes = Math.floor(totalTime / 60);
-                    const seconds = totalTime % 60;
-                    
-                    this.updateStatus(`✅ ${realBusinesses.length} gerçek işletme bulundu! (GitHub Pages) Süre: ${minutes}:${seconds.toString().padStart(2, '0')}`);
-                    
-                    this.elements.startBtn.disabled = false;
-                    this.elements.stopBtn.disabled = true;
-                    this.elements.sendMailBtn.disabled = false;
-                    this.isScrapingActive = false;
-                    
-                    if (this.progressInterval) {
-                        clearInterval(this.progressInterval);
-                    }
-                    
-                    return;
-                }
-                
-                console.log('GitHub Pages\'de gerçek veri çekilemedi, demo veri gösteriliyor...');
-                this.updateStatus('⚠️ GitHub Pages - Gerçek veri çekilemedi. Demo veriler gösteriliyor...');
-                await this.showDemoData(keyword, country, city);
-                return;
-            }
+            this.updateStatus('🔍 OpenStreetMap API\'lerden veri çekiliyor...');
             
-            // Vercel/diğer platformlar için normal akış
-            // Önce Vercel API'sini dene
-            this.updateStatus('🔍 Vercel API ile veri çekiliyor...');
-            const vercelData = await this.tryRealBusinessData(keyword, country, city);
+            // Doğrudan OpenStreetMap API'larını dene
+            const osmBusinesses = await this.tryOpenStreetMapDirectly(keyword, country, city);
             
-            if (vercelData && vercelData.length > 0) {
-                this.displayRealData(vercelData, 'Vercel API');
+            if (osmBusinesses && osmBusinesses.length > 0) {
+                this.displayRealData(osmBusinesses, 'OpenStreetMap');
                 
                 this.scrapingEndTime = Date.now();
                 const totalTime = Math.floor((this.scrapingEndTime - this.scrapingStartTime) / 1000);
                 const minutes = Math.floor(totalTime / 60);
                 const seconds = totalTime % 60;
                 
-                this.updateStatus(`✅ ${vercelData.length} gerçek işletme bulundu! (Vercel API) Süre: ${minutes}:${seconds.toString().padStart(2, '0')}`);
+                this.updateStatus(`✅ ${osmBusinesses.length} gerçek işletme bulundu! (OpenStreetMap) Süre: ${minutes}:${seconds.toString().padStart(2, '0')}`);
                 
                 this.elements.startBtn.disabled = false;
                 this.elements.stopBtn.disabled = true;
@@ -268,40 +233,28 @@ class GoogleMapsScraperWeb {
                 return;
             }
             
-            // Vercel API başarısızsa diğer kaynakları dene
-            console.log('Vercel API veri döndürmedi, diğer kaynaklar deneniyor...');
-            const realBusinesses = await this.tryAdvancedRealDataScraping(keyword, country, city);
+            console.log('OpenStreetMap\'ten veri bulunamadı');
+            this.updateStatus('❌ OpenStreetMap\'ten veri bulunamadı. Farklı bir kelime deneyin.');
             
-            if (realBusinesses && realBusinesses.length > 0) {
-                this.displayRealData(realBusinesses, 'Çoklu Kaynak');
-                
-                this.scrapingEndTime = Date.now();
-                const totalTime = Math.floor((this.scrapingEndTime - this.scrapingStartTime) / 1000);
-                const minutes = Math.floor(totalTime / 60);
-                const seconds = totalTime % 60;
-                
-                this.updateStatus(`✅ ${realBusinesses.length} gerçek işletme bulundu! Süre: ${minutes}:${seconds.toString().padStart(2, '0')}`);
-                
-                this.elements.startBtn.disabled = false;
-                this.elements.stopBtn.disabled = true;
-                this.elements.sendMailBtn.disabled = false;
-                this.isScrapingActive = false;
-                
-                if (this.progressInterval) {
-                    clearInterval(this.progressInterval);
-                }
-                
-                return;
+            this.elements.startBtn.disabled = false;
+            this.elements.stopBtn.disabled = true;
+            this.isScrapingActive = false;
+            
+            if (this.progressInterval) {
+                clearInterval(this.progressInterval);
             }
             
-            console.log('Gerçek veri çekilemedi, demo veri gösteriliyor...');
-            this.updateStatus('⚠️ Gerçek veri çekilemedi. Demo veriler gösteriliyor...');
-            
-            await this.showDemoData(keyword, country, city);
         } catch (error) {
-            console.error('Veri çekme hatası:', error);
-            this.updateStatus('❌ Hata oluştu, demo veriler gösteriliyor...');
-            await this.showDemoData(keyword, country, city);
+            console.error('OpenStreetMap veri çekme hatası:', error);
+            this.updateStatus('❌ Hata oluştu. Farklı bir kelime deneyin.');
+            
+            this.elements.startBtn.disabled = false;
+            this.elements.stopBtn.disabled = true;
+            this.isScrapingActive = false;
+            
+            if (this.progressInterval) {
+                clearInterval(this.progressInterval);
+            }
         }
     }
 
@@ -1057,7 +1010,7 @@ class GoogleMapsScraperWeb {
             }
             
         } catch (error) {
-            console.error('Vercel API çağrı hatası:', error);
+            if (error.name === 'Abort çağrı hatası:', error);
             return null;
         }
     }
