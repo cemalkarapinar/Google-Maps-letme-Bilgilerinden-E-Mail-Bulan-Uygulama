@@ -206,6 +206,42 @@ class GoogleMapsScraperWeb {
 
     async attemptRealDataScraping(keyword, country, city) {
         try {
+            // GitHub Pages için özel durum
+            if (window.location.hostname.includes('github.io')) {
+                console.log('GitHub Pages tespit edildi, doğrudan gerçek API\'lere geçiliyor...');
+                this.updateStatus('🔍 GitHub Pages - Gerçek API\'lerden veri çekiliyor...');
+                
+                const realBusinesses = await this.tryAdvancedRealDataScraping(keyword, country, city);
+                
+                if (realBusinesses && realBusinesses.length > 0) {
+                    this.displayRealData(realBusinesses, 'GitHub Pages - Gerçek API\'ler');
+                    
+                    this.scrapingEndTime = Date.now();
+                    const totalTime = Math.floor((this.scrapingEndTime - this.scrapingStartTime) / 1000);
+                    const minutes = Math.floor(totalTime / 60);
+                    const seconds = totalTime % 60;
+                    
+                    this.updateStatus(`✅ ${realBusinesses.length} gerçek işletme bulundu! (GitHub Pages) Süre: ${minutes}:${seconds.toString().padStart(2, '0')}`);
+                    
+                    this.elements.startBtn.disabled = false;
+                    this.elements.stopBtn.disabled = true;
+                    this.elements.sendMailBtn.disabled = false;
+                    this.isScrapingActive = false;
+                    
+                    if (this.progressInterval) {
+                        clearInterval(this.progressInterval);
+                    }
+                    
+                    return;
+                }
+                
+                console.log('GitHub Pages\'de gerçek veri çekilemedi, demo veri gösteriliyor...');
+                this.updateStatus('⚠️ GitHub Pages - Gerçek veri çekilemedi. Demo veriler gösteriliyor...');
+                await this.showDemoData(keyword, country, city);
+                return;
+            }
+            
+            // Vercel/diğer platformlar için normal akış
             // Önce Vercel API'sini dene
             this.updateStatus('🔍 Vercel API ile veri çekiliyor...');
             const vercelData = await this.tryRealBusinessData(keyword, country, city);
@@ -968,6 +1004,13 @@ class GoogleMapsScraperWeb {
     // Vercel API ile gerçek veri çekme
     async tryRealBusinessData(keyword, country, city) {
         try {
+            // GitHub Pages kontrolü - statik hosting'de serverless function çalışmaz
+            if (window.location.hostname.includes('github.io')) {
+                console.log('GitHub Pages tespit edildi, doğrudan API\'lere geçiliyor...');
+                this.updateStatus('🔍 GitHub Pages - Doğrudan API\'lerden veri çekiliyor...');
+                return null; // Diğer API'lere geç
+            }
+            
             this.updateStatus('🔍 Vercel API\'den gerçek veri çekiliyor...');
             
             // Vercel serverless function'ı çağır

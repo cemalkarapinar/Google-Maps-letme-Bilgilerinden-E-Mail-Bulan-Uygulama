@@ -139,22 +139,45 @@ Bu araç eğitim ve araştırma amaçlıdır. Kullanırken:
 - Kişisel verileri koruyun
 - Ticari kullanım için izin alın
 
-## 🆕 Son Güncellemeler (v2.1)
+## 🚀 Deployment Seçenekleri
+
+### 🌐 GitHub Pages (Mevcut)
+- **URL**: [https://cemalkarapinar.github.io/Google-Maps-letme-Bilgilerinden-E-Mail-Bulan-Uygulama](https://cemalkarapinar.github.io/Google-Maps-letme-Bilgilerinden-E-Mail-Bulan-Uygulama)
+- **Özellikler**: Statik hosting, OpenStreetMap API'leri, web scraping
+- **Avantajlar**: Ücretsiz, hızlı, kolay deployment
+- **Sınırlamalar**: Serverless function'lar çalışmaz
+
+### ⚡ Vercel (Önerilen)
+- **Özellikler**: Tüm özellikler + serverless API + backend processing
+- **Avantajlar**: Daha iyi performans, gelişmiş veri çekme, tam özellik seti
+- **Deployment**: GitHub repository'yi Vercel'e bağlayın
+
+## 🆕 Son Güncellemeler (v2.2)
 
 ### ✅ Düzeltilen Sorunlar
-- **HTTPS Sorunları**: Tüm API çağrıları güvenli bağlantıya çevrildi
-- **CORS Hataları**: 4 farklı proxy ile cross-origin sorunları çözüldü
-- **Favicon 404**: SVG favicon eklendi, 404 hatası giderildi
-- **Mixed Content**: HTTP/HTTPS karışık içerik sorunu çözüldü
+- **GitHub Pages Uyumluluğu**: Statik hosting için özel optimizasyon
+- **Vercel API Entegrasyonu**: Serverless function'lar ile gelişmiş veri çekme
+- **Platform Tespiti**: Otomatik platform algılama ve uygun API seçimi
+- **CORS Optimizasyonu**: Her platform için optimize edilmiş proxy'ler
 
 ### 🚀 Yeni Özellikler
-- **Gelişmiş Web Scraping**: 4 proxy ile Google arama sonuçlarından veri çekme
-- **Akıllı E-mail Arama**: Website'lerden otomatik e-mail bulma
-- **API Optimizasyonu**: OpenStreetMap ve Photon API'leri optimize edildi
-- **Hata Toleransı**: Gelişmiş fallback sistemleri
+- **Çoklu Platform Desteği**: GitHub Pages + Vercel uyumluluğu
+- **Akıllı API Seçimi**: Platform bazlı otomatik API seçimi
+- **Gelişmiş Serverless**: Vercel function'ları ile güçlü backend
+- **Hibrit Yaklaşım**: Frontend + backend entegrasyonu
+
+### 📊 Platform Karşılaştırması
+| Özellik | GitHub Pages | Vercel |
+|---------|--------------|--------|
+| **Statik Hosting** | ✅ | ✅ |
+| **Serverless API** | ❌ | ✅ |
+| **OpenStreetMap** | ✅ | ✅ |
+| **Web Scraping** | ⚠️ Sınırlı | ✅ |
+| **Backend Processing** | ❌ | ✅ |
+| **Maliyet** | Ücretsiz | Ücretsiz |
 
 ### 📅 Güncelleme Tarihi
-**Son Güncelleme**: 31 Ağustos 2025
+**Son Güncelleme**: 1 Eylül 2025
 
 ---
 
