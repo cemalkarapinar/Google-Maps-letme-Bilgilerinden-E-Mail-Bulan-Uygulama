@@ -209,7 +209,7 @@ class GoogleMapsScraperWeb {
             this.updateStatus('🔍 OpenStreetMap API\'lerden veri çekiliyor...');
             
             // Doğrudan OpenStreetMap API'larını dene
-            const osmBusinesses = await this.tryOpenStreetMapDirectly(keyword, country, city);
+            const osmBusinesses = await this.tryOpenStreetMapAPI(keyword, country, city);
             
             if (osmBusinesses && osmBusinesses.length > 0) {
                 this.displayRealData(osmBusinesses, 'OpenStreetMap');
@@ -952,6 +952,79 @@ class GoogleMapsScraperWeb {
 
     openSendMailDialog() {
         alert('Mail gönderme özelliği geliştirme aşamasında!');
+    }
+
+    // OpenStreetMap API'larını doğrudan çağır
+    async tryOpenStreetMapAPI(keyword, country, city) {
+        try {
+            this.updateStatus('🔍 OpenStreetMap API\'lerden veri çekiliyor...');
+            
+            const endpoints = [
+                `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(keyword + ' ' + city)}&countrycodes=tr&format=json&addressdetails=1&limit=15&extratags=1`,
+                `https://photon.komoot.io/api/?q=${encodeURIComponent(keyword + ' ' + city + ' türkiye')}&limit=15`,
+                `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(keyword)}&city=${encodeURIComponent(city || '')}&countrycodes=tr&format=json&addressdetails=1&limit=15&extratags=1`
+            ];
+            
+            for (const url of endpoints) {
+                try {
+                    console.log(`OSM API deneniyor: ${url.includes('photon') ? 'Photon' : 'Nominatim'}`);
+                    
+                    const response = await fetch(url, {
+                        headers: {
+                            'User-Agent': 'GoogleMapsScraperWeb/1.0 (Educational Purpose)',
+                            'Accept': 'application/json'
+                        }
+                    });
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        console.log(`OSM API yanıt: ${data?.length || data?.features?.length || 0} sonuç`);
+                        
+                        if (data && (data.length > 0 || (data.features && data.features.length > 0))) {
+                            let businesses;
+                            
+                            if (url.includes('photon.komoot.io')) {
+                                businesses = data.features?.map(item => ({
+                                    name: item.properties?.name || 'Bilinmeyen İşletme',
+                                    address: this.formatPhotonAddress(item.properties),
+                                    phone: item.properties?.phone || 'Bulunamadı',
+                                    website: item.properties?.website || 'Bulunamadı',
+                                    email: 'Bulunamadı',
+                                    source: 'Photon API'
+                                })) || [];
+                            } else {
+                                businesses = data.map(item => ({
+                                    name: item.name || item.display_name?.split(',')[0] || 'Bilinmeyen İşletme',
+                                    address: item.display_name || 'Adres bulunamadı',
+                                    phone: item.extratags?.phone || item.extratags?.['contact:phone'] || 'Bulunamadı',
+                                    website: item.extratags?.website || item.extratags?.['contact:website'] || 'Bulunamadı',
+                                    email: 'Bulunamadı',
+                                    source: 'OpenStreetMap'
+                                }));
+                            }
+                            
+                            const validBusinesses = businesses.filter(b => 
+                                b.name !== 'Bilinmeyen İşletme' && 
+                                b.name.length > 2 &&
+                                !b.name.includes('undefined')
+                            );
+                            
+                            if (validBusinesses.length > 0) {
+                                console.log(`OSM API başarılı: ${validBusinesses.length} işletme bulundu`);
+                                return validBusinesses;
+                            }
+                        }
+                    }
+                } catch (endpointError) {
+                    console.log(`Endpoint hatası: ${endpointError.message}`);
+                }
+            }
+            
+            return null;
+        } catch (error) {
+            console.error('OpenStreetMap API hatası:', error);
+            return null;
+        }
     }
 
     // Vercel API ile gerçek veri çekme
