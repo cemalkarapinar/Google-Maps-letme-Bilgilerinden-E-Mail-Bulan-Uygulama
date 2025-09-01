@@ -206,7 +206,36 @@ class GoogleMapsScraperWeb {
 
     async attemptRealDataScraping(keyword, country, city) {
         try {
+            // Önce Vercel API'sini dene
+            this.updateStatus('🔍 Vercel API ile veri çekiliyor...');
+            const vercelData = await this.tryRealBusinessData(keyword, country, city);
+            
+            if (vercelData && vercelData.length > 0) {
+                this.displayRealData(vercelData, 'Vercel API');
+                
+                this.scrapingEndTime = Date.now();
+                const totalTime = Math.floor((this.scrapingEndTime - this.scrapingStartTime) / 1000);
+                const minutes = Math.floor(totalTime / 60);
+                const seconds = totalTime % 60;
+                
+                this.updateStatus(`✅ ${vercelData.length} gerçek işletme bulundu! (Vercel API) Süre: ${minutes}:${seconds.toString().padStart(2, '0')}`);
+                
+                this.elements.startBtn.disabled = false;
+                this.elements.stopBtn.disabled = true;
+                this.elements.sendMailBtn.disabled = false;
+                this.isScrapingActive = false;
+                
+                if (this.progressInterval) {
+                    clearInterval(this.progressInterval);
+                }
+                
+                return;
+            }
+            
+            // Vercel API başarısızsa diğer kaynakları dene
+            console.log('Vercel API veri döndürmedi, diğer kaynaklar deneniyor...');
             const realBusinesses = await this.tryAdvancedRealDataScraping(keyword, country, city);
+            
             if (realBusinesses && realBusinesses.length > 0) {
                 this.displayRealData(realBusinesses, 'Çoklu Kaynak');
                 
@@ -936,32 +965,50 @@ class GoogleMapsScraperWeb {
         alert('Mail gönderme özelliği geliştirme aşamasında!');
     }
 
-    // Yeni güçlü gerçek veri çekme sistemi
+    // Vercel API ile gerçek veri çekme
     async tryRealBusinessData(keyword, country, city) {
         try {
-            this.updateStatus('🔍 Gerçek işletme verileri aranıyor...');
+            this.updateStatus('🔍 Vercel API\'den gerçek veri çekiliyor...');
             
-            // 1. OpenCage Geocoding API (ücretsiz tier)
-            const geocodeData = await this.tryOpenCageAPI(keyword, city, country);
-            if (geocodeData && geocodeData.length > 0) {
-                return geocodeData;
+            // Vercel serverless function'ı çağır
+            const apiUrl = window.location.hostname === 'localhost' 
+                ? 'http://localhost:3000/api/search'  // Local development
+                : '/api/search';  // Production (Vercel)
+            
+            const params = new URLSearchParams({
+                keyword: keyword,
+                country: country,
+                city: city || ''
+            });
+            
+            console.log(`Vercel API çağrısı: ${apiUrl}?${params.toString()}`);
+            
+            const response = await fetch(`${apiUrl}?${params.toString()}`, {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            if (response.ok) {
+                const result = await response.json();
+                console.log('Vercel API yanıtı:', result);
+                
+                if (result.success && result.data && result.data.length > 0) {
+                    console.log(`Vercel API başarılı: ${result.data.length} işletme bulundu`);
+                    return result.data;
+                } else {
+                    console.log('Vercel API boş sonuç döndü');
+                    return null;
+                }
+            } else {
+                console.error('Vercel API hatası:', response.status, response.statusText);
+                return null;
             }
-
-            // 2. Geonames API (ücretsiz)
-            const geonamesData = await this.tryGeonamesAPI(keyword, city, country);
-            if (geonamesData && geonamesData.length > 0) {
-                return geonamesData;
-            }
-
-            // 3. Wikipedia API ile işletme arama
-            const wikiData = await this.tryWikipediaBusinessAPI(keyword, city, country);
-            if (wikiData && wikiData.length > 0) {
-                return wikiData;
-            }
-
-            return null;
+            
         } catch (error) {
-            console.error('Gerçek veri çekme hatası:', error);
+            console.error('Vercel API çağrı hatası:', error);
             return null;
         }
     }

@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-result { margin: 10px 0; padding: 10px; border-radius: 5px; }
+        .success { background-color: #d4edda; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }
+        .loading { background-color: #fff3cd; color: #856404; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 5px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>Vercel API Test</h1>
+    
+    <div>
+        <button onclick="testAPI()">API Test Et</button>
+        <button onclick="clearResults()">Temizle</button>
+    </div>
+    
+    <div id="results"></div>
+
+    <script>
+        async function testAPI() {
+            const resultsDiv = document.getElementById('results');
+            
+            // Loading mesajı
+            resultsDiv.innerHTML = '<div class="test-result loading">API test ediliyor...</div>';
+            
+            try {
+                // Test parametreleri
+                const params = new URLSearchParams({
+                    keyword: 'seo',
+                    country: 'Türkiye',
+                    city: 'İstanbul'
+                });
+                
+                const apiUrl = '/api/search?' + params.toString();
+                console.log('API URL:', apiUrl);
+                
+                const response = await fetch(apiUrl, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                console.log('Response status:', response.status);
+                console.log('Response headers:', response.headers);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('API Response:', data);
+                    
+                    resultsDiv.innerHTML = `
+                        <div class="test-result success">
+                            <h3>✅ API Başarılı!</h3>
+                            <p><strong>Status:</strong> ${response.status}</p>
+                            <p><strong>Sonuç Sayısı:</strong> ${data.count || 0}</p>
+                            <p><strong>Başarılı:</strong> ${data.success ? 'Evet' : 'Hayır'}</p>
+                        </div>
+                        <div class="test-result">
+                            <h4>API Yanıtı:</h4>
+                            <pre>${JSON.stringify(data, null, 2)}</pre>
+                        </div>
+                    `;
+                } else {
+                    const errorText = await response.text();
+                    console.error('API Error:', errorText);
+                    
+                    resultsDiv.innerHTML = `
+                        <div class="test-result error">
+                            <h3>❌ API Hatası!</h3>
+                            <p><strong>Status:</strong> ${response.status}</p>
+                            <p><strong>Status Text:</strong> ${response.statusText}</p>
+                            <p><strong>Error:</strong> ${errorText}</p>
+                        </div>
+                    `;
+                }
+                
+            } catch (error) {
+                console.error('Fetch Error:', error);
+                
+                resultsDiv.innerHTML = `
+                    <div class="test-result error">
+                        <h3>❌ Bağlantı Hatası!</h3>
+                        <p><strong>Error:</strong> ${error.message}</p>
+                        <p>API endpoint'ine ulaşılamıyor. Vercel deployment'ını kontrol edin.</p>
+                    </div>
+                `;
+            }
+        }
+        
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+        }
+        
+        // Sayfa yüklendiğinde otomatik test
+        window.addEventListener('load', () => {
+            console.log('Test sayfası yüklendi');
+            console.log('Current URL:', window.location.href);
+        });
+    </script>
+</body>
+</html>

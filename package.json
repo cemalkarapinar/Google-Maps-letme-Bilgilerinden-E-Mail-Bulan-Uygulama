@@ -9,6 +9,8 @@
     "frontend": "node server.js",
     "simple": "python -m http.server 8000",
     "install-deps": "npm install",
+    "build": "echo 'Build completed'",
+    "vercel-build": "echo 'Vercel build completed'",
     "test": "echo \"No tests specified\" && exit 0"
   },
   "keywords": [
