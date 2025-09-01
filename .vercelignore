@@ -1,9 +1,8 @@
 node_modules
-.env
-.env.local
-.env.production
-.env.development
+.env*
 backend-example.js
 server.js
 test-api.html
 README-GITHUB-PAGES.md
+vercel-test.md
+package-lock.json

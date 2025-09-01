@@ -1,38 +1,5 @@
 {
   "name": "google-maps-scraper-web",
   "version": "1.0.0",
-  "description": "Web-based Google Maps business information scraper",
-  "main": "backend-example.js",
-  "scripts": {
-    "start": "node backend-example.js",
-    "dev": "nodemon backend-example.js",
-    "frontend": "node server.js",
-    "simple": "python -m http.server 8000",
-    "install-deps": "npm install",
-    "build": "echo 'Build completed'",
-    "vercel-build": "echo 'Vercel build completed'",
-    "test": "echo \"No tests specified\" && exit 0"
-  },
-  "keywords": [
-    "google-maps",
-    "scraper",
-    "business-data",
-    "web-scraping",
-    "puppeteer",
-    "express"
-  ],
-  "author": "Your Name",
-  "license": "MIT",
-  "dependencies": {},
-  "devDependencies": {
-    "nodemon": "^3.0.2"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/yourusername/google-maps-scraper-web.git"
-  },
-  "bugs": {
-    "url": "https://github.com/yourusername/google-maps-scraper-web/issues"
-  },
-  "homepage": "https://github.com/yourusername/google-maps-scraper-web#readme"
+  "type": "module"
 }
