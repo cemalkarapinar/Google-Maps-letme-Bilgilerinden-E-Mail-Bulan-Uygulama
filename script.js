@@ -1026,13 +1026,19 @@ class GoogleMapsScraperWeb {
             
             console.log(`Vercel API çağrısı: ${apiUrl}?${params.toString()}`);
             
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 saniye timeout
+            
             const response = await fetch(`${apiUrl}?${params.toString()}`, {
                 method: 'GET',
                 headers: {
                     'Accept': 'application/json',
                     'Content-Type': 'application/json'
-                }
+                },
+                signal: controller.signal
             });
+            
+            clearTimeout(timeoutId);
             
             if (response.ok) {
                 const result = await response.json();
