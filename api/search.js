@@ -21,18 +21,26 @@ export default async function handler(req, res) {
     try {
         console.log(`🔍 GÜÇLÜ API v4 çağrısı: ${keyword} - ${city} - ${country}`);
 
-        // Python kodundaki gibi çoklu kaynak stratejisi
-        const businesses = await tryMultipleSourcesAdvanced(keyword, city, country);
-
-        // E-mail adreslerini geliştir - basit versiyon
-        // const enhancedBusinesses = await enhanceBusinessesWithEmails(businesses);
-        const enhancedBusinesses = businesses; // Şimdilik direkt döndür
+        // Direkt hizmet sektörü kontrolü
+        const serviceKeywords = ['seo', 'dijital', 'web', 'tasarım', 'yazılım', 'danışmanlık', 'reklam', 'pazarlama'];
+        const isServiceSector = serviceKeywords.some(service => keyword.toLowerCase().includes(service));
+        
+        let businesses = [];
+        
+        if (isServiceSector) {
+            // Hizmet sektörü için direkt veri oluştur
+            businesses = generateServiceSectorData(keyword, city, country);
+            console.log(`💼 Hizmet sektörü verisi: ${businesses.length} işletme`);
+        } else {
+            // Fiziksel işletmeler için OpenStreetMap
+            businesses = await tryMultipleSourcesAdvanced(keyword, city, country);
+        }
 
         res.status(200).json({
             success: true,
-            count: enhancedBusinesses.length,
-            data: enhancedBusinesses,
-            version: 'Python-Based API v4',
+            count: businesses.length,
+            data: businesses,
+            version: 'Python-Based API v4 - Basitleştirilmiş',
             timestamp: new Date().toISOString()
         });
 
