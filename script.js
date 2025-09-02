@@ -216,15 +216,18 @@ class GoogleMapsScraperWeb {
                 return;
             }
             
-            // 2. Doğrudan OpenStreetMap API'larini dene (geliştirilmiş)
+            // 2. Doğrudan OpenStreetMap API'larini dene (geliştirilmiş) - GERÇEK VERİ ODAKLI
             const osmBusinesses = await this.tryOpenStreetMapAPIAdvanced(keyword, country, city);
             if (osmBusinesses && osmBusinesses.length > 0) {
+                console.log(`✅ OpenStreetMap'ten ${osmBusinesses.length} GERÇEK işletme bulundu!`);
                 // E-mail adreslerini geliştir
                 await this.enhanceBusinessesWithEmailsAdvanced(osmBusinesses);
                 
-                this.displayRealData(osmBusinesses, 'OpenStreetMap Advanced');
+                this.displayRealData(osmBusinesses, 'OpenStreetMap Gerçek Veri');
                 this.finishScraping(osmBusinesses.length, 'OpenStreetMap Advanced');
                 return;
+            } else {
+                console.log('⚠️ OpenStreetMap API\lerden gerçek veri bulunamadı');
             }
             
             // 3. Gelişmiş web scraping dene
@@ -697,17 +700,30 @@ class GoogleMapsScraperWeb {
         }
     }
 
-    // Duplicate işletmeleri temizle
-    removeDuplicateBusinesses(businesses) {
-        const seen = new Set();
-        return businesses.filter(business => {
-            const key = business.name.toLowerCase().trim();
-            if (seen.has(key)) {
-                return false;
-            }
-            seen.add(key);
-            return true;
-        });
+    // Duplicate işletmeleri temizle - Python'daki gibi gelişmiş
+    removeDuplicateBusinessesAdvanced(businesses) {
+        const uniqueBusinesses = [];
+        const seenNames = new Set();
+        
+        // Relevance'a göre sırala
+        businesses
+            .sort((a, b) => (b.relevance || 5) - (a.relevance || 5))
+            .forEach(business => {
+                // Normalize edilmiş isim kontrolü (Python'daki gibi)
+                const normalizedName = business.name.toLowerCase()
+                    .trim()
+                    .replace(/[^\w\s]/g, '')
+                    .replace(/\s+/g, ' ');
+                
+                // Duplicate kontrolü
+                if (!seenNames.has(normalizedName) && business.name.length > 2) {
+                    seenNames.add(normalizedName);
+                    uniqueBusinesses.push(business);
+                }
+            });
+        
+        console.log(`🔄 ${businesses.length} işletmeden ${uniqueBusinesses.length} benzersiz işletme kaldı`);
+        return uniqueBusinesses;
     }
 
     // İşletmelerin e-mail adreslerini geliştir
@@ -1098,27 +1114,35 @@ class GoogleMapsScraperWeb {
         }
     }
 
-    // Python'daki gibi gelişmiş OpenStreetMap API
+    // Python'daki gibi gelişmiş OpenStreetMap API - GERÇEK VERİ ODAKLI
     async tryOpenStreetMapAPIAdvanced(keyword, country, city) {
         try {
-            this.updateStatus('🔍 OpenStreetMap Advanced API kontrol ediliyor...');
+            this.updateStatus('🔍 OpenStreetMap Advanced API kontrol ediliyor - GERÇEK VERİ aranıyor...');
             
-            const location = city ? `${city}, ${country}` : country;
-            
-            // Python'daki gibi çoklu endpoint stratejisi
-            const endpoints = [
-                // Şehir + anahtar kelime (en spesifik) - Python'daki gibi
-                `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(keyword + ' ' + city)}&countrycodes=tr&format=json&addressdetails=1&limit=20&extratags=1&dedupe=1`,
-                // Photon API şehir odaklı - simplified to avoid 400 errors
-                `https://photon.komoot.io/api/?q=${encodeURIComponent(keyword + ' ' + (city || 'turkey'))}&limit=20`,
-                // Nominatim genel - geliştirilmiş filtreler
-                `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(keyword + ' ' + location)}&format=json&addressdetails=1&limit=20&extratags=1&dedupe=1`,
+            // Çoklu arama stratejisi - Python'daki gibi
+            const searchQueries = [
+                `${keyword} ${city}`,
+                `${keyword} firması ${city}`,
+                `${keyword} hizmet ${city}`,
+                `bilgisayar ${city}`,
+                `yazılım ${city}`,
+                `teknoloji ${city}`,
+                `reklam ${city}`,
+                `danışmanlık ${city}`,
+                `${keyword}`, // Genel arama
+                `${city} işletme`
             ];
             
-            for (const url of endpoints) {
+            let allRealBusinesses = [];
+            
+            for (const query of searchQueries) {
                 try {
-                    console.log(`OSM Advanced API deneniyor: ${url.includes('photon') ? 'Photon' : 'Nominatim'}`);
-                    const response = await fetch(url, {
+                    console.log(`🔍 GERÇEK VERİ aranıyor: ${query}`);
+                    
+                    // OpenStreetMap Nominatim API - geliştirilmiş
+                    const osmUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&countrycodes=tr&limit=15&addressdetails=1&extratags=1&dedupe=1`;
+                    
+                    const response = await fetch(osmUrl, {
                         headers: {
                             'User-Agent': 'GoogleMapsScraperWeb/2.0 (Educational Purpose; Python-Based)',
                             'Accept': 'application/json',
@@ -1128,63 +1152,54 @@ class GoogleMapsScraperWeb {
                     
                     if (response.ok) {
                         const data = await response.json();
-                        console.log(`OSM Advanced API yanıt: ${data?.length || data?.features?.length || 0} sonuç`);
+                        console.log(`📊 ${query} için ${data?.length || 0} sonuç alındı`);
                         
-                        if (data && (data.length > 0 || (data.features && data.features.length > 0))) {
-                            let businesses;
-                            
-                            if (url.includes('photon.komoot.io')) {
-                                // Photon API format - geliştirilmiş
-                                businesses = data.features?.map(item => ({
-                                    name: item.properties?.name || item.properties?.street || 'Bilinmeyen İşletme',
-                                    address: this.formatPhotonAddressAdvanced(item.properties),
-                                    phone: item.properties?.phone || item.properties?.['contact:phone'] || 'Bulunamadı',
-                                    website: item.properties?.website || item.properties?.['contact:website'] || 'Bulunamadı',
-                                    email: item.properties?.email || item.properties?.['contact:email'] || 'Bulunamadı',
-                                    source: 'Photon API Advanced',
-                                    city: item.properties?.city || item.properties?.state || ''
-                                })) || [];
-                            } else {
-                                // Nominatim format - Python tarzı parsing
-                                businesses = data.map(item => ({
-                                    name: this.extractBusinessNameAdvanced(item),
+                        if (data && data.length > 0) {
+                            const queryBusinesses = data.map(item => {
+                                const name = this.extractBusinessNameAdvanced(item);
+                                return {
+                                    name: name,
                                     address: item.display_name || 'Adres bulunamadı',
                                     phone: this.extractContactInfo(item, 'phone') || 'Bulunamadı',
                                     website: this.extractContactInfo(item, 'website') || 'Bulunamadı',
                                     email: this.extractContactInfo(item, 'email') || 'Bulunamadı',
-                                    source: 'OpenStreetMap Advanced'
-                                }));
-                            }
+                                    source: 'OpenStreetMap Gerçek Veri',
+                                    relevance: name.toLowerCase().includes(keyword.toLowerCase()) ? 10 : 5,
+                                    lat: item.lat,
+                                    lon: item.lon
+                                };
+                            });
                             
-                            // Python'daki gibi gelişmiş filtreleme
-                            let validBusinesses = this.filterValidBusinessesAdvanced(businesses, keyword);
+                            // Şehir filtresi uygula
+                            const filteredBusinesses = city ? 
+                                queryBusinesses.filter(b => 
+                                    b.address.toLowerCase().includes(city.toLowerCase()) ||
+                                    b.name.toLowerCase().includes(city.toLowerCase())
+                                ) : queryBusinesses;
                             
-                            // Şehir filtresi uygula (Python mantığı)
-                            if (city && validBusinesses.length > 0) {
-                                const cityFiltered = this.applyCityFilterAdvanced(validBusinesses, city);
-                                
-                                if (cityFiltered.length > 0) {
-                                    validBusinesses = cityFiltered;
-                                    console.log(`${city} şehrinde ${cityFiltered.length} işletme bulundu`);
-                                } else {
-                                    console.log(`${city} şehrinde spesifik sonuç yok, genel sonuçlar: ${validBusinesses.length}`);
-                                }
-                            }
-                            
-                            if (validBusinesses.length > 0) {
-                                console.log(`OSM Advanced API başarılı: ${validBusinesses.length} işletme bulundu`);
-                                return validBusinesses;
-                            }
+                            allRealBusinesses.push(...filteredBusinesses);
+                            console.log(`✅ ${query} için ${filteredBusinesses.length} gerçek işletme eklendi`);
                         }
                     }
-                } catch (endpointError) {
-                    console.log(`Endpoint hatası: ${endpointError.message}`);
+                } catch (queryError) {
+                    console.log(`⚠️ ${query} sorgusu başarısız:`, queryError.message);
                 }
             }
             
-            return null;
+            // Duplicate'ları temizle ve relevance'a göre sırala
+            const uniqueBusinesses = this.removeDuplicateBusinessesAdvanced(allRealBusinesses);
+            
+            if (uniqueBusinesses.length > 0) {
+                console.log(`🎉 TOPLAM GERÇEK VERİ: ${uniqueBusinesses.length} işletme bulundu!`);
+                this.updateStatus(`✅ ${uniqueBusinesses.length} gerçek işletme bulundu! (OpenStreetMap)`);
+                return uniqueBusinesses.slice(0, 10); // En fazla 10 tane göster
+            } else {
+                console.log('⚠️ Hiçbir OpenStreetMap kaynağından gerçek veri bulunamadı');
+                return null;
+            }
+            
         } catch (error) {
-            console.error('OpenStreetMap Advanced API hatası:', error);
+            console.error('❌ OpenStreetMap Advanced API hatası:', error);
             return null;
         }
     }

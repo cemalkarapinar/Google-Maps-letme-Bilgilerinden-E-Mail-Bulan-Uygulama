@@ -27,8 +27,97 @@ export default async function handler(req, res) {
         
         let businesses = [];
         
-        if (isServiceSector) {
-            // Hizmet sektörü için direkt veri oluştur (Python'daki gibi)
+        // Önce her durumda OpenStreetMap'ten gerçek veri aramaya çalış
+        try {
+            console.log('🔍 Gerçek işletme verileri aranıyor...');
+            
+            // Çoklu OpenStreetMap API çağrısı
+            const searchQueries = [
+                `${keyword} ${city || ''}`,
+                `${keyword} firması ${city || ''}`,
+                `${keyword} hizmet ${city || ''}`,
+                `bilgisayar ${city || ''}`,
+                `yazılım ${city || ''}`,
+                `teknoloji ${city || ''}`,
+                `reklam ${city || ''}`,
+                `danışmanlık ${city || ''}`
+            ];
+            
+            let allRealBusinesses = [];
+            
+            for (const query of searchQueries) {
+                try {
+                    const osmUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&countrycodes=tr&limit=15&addressdetails=1&extratags=1`;
+                    console.log(`🌍 OSM API sorgusu: ${query}`);
+                    
+                    const response = await fetch(osmUrl, {
+                        headers: {
+                            'User-Agent': 'GoogleMapsBusinessScraper/2.0'
+                        }
+                    });
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data && data.length > 0) {
+                            const queryBusinesses = data.map(item => {
+                                const name = item.name || item.display_name?.split(',')[0] || 'İşletme';
+                                return {
+                                    name: name,
+                                    address: item.display_name || 'Adres bulunamadı',
+                                    phone: item.extratags?.phone || item.extratags?.['contact:phone'] || 'Bulunamadı',
+                                    website: item.extratags?.website || item.extratags?.['contact:website'] || 'Bulunamadı',
+                                    email: item.extratags?.email || item.extratags?.['contact:email'] || 'Bulunamadı',
+                                    source: 'OpenStreetMap Gerçek Veri',
+                                    relevance: name.toLowerCase().includes(keyword.toLowerCase()) ? 10 : 5
+                                };
+                            });
+                            
+                            // Şehir filtresi uygula
+                            const filteredBusinesses = city ? 
+                                queryBusinesses.filter(b => 
+                                    b.address.toLowerCase().includes(city.toLowerCase()) ||
+                                    b.name.toLowerCase().includes(city.toLowerCase())
+                                ) : queryBusinesses;
+                            
+                            allRealBusinesses.push(...filteredBusinesses);
+                            console.log(`✅ ${query} için ${filteredBusinesses.length} gerçek işletme bulundu`);
+                        }
+                    }
+                } catch (queryError) {
+                    console.log(`⚠️ ${query} sorgusu başarısız:`, queryError.message);
+                }
+            }
+            
+            // Duplicate'ları temizle ve relevance'a göre sırala
+            const uniqueBusinesses = [];
+            const seenNames = new Set();
+            
+            allRealBusinesses
+                .sort((a, b) => b.relevance - a.relevance)
+                .forEach(business => {
+                    const normalizedName = business.name.toLowerCase().trim();
+                    if (!seenNames.has(normalizedName) && business.name.length > 2) {
+                        seenNames.add(normalizedName);
+                        uniqueBusinesses.push(business);
+                    }
+                });
+            
+            if (uniqueBusinesses.length > 0) {
+                businesses = uniqueBusinesses.slice(0, 10);
+                console.log(`🎉 TOPLAM GERÇEK VERİ: ${businesses.length} işletme bulundu`);
+            } else {
+                console.log('⚠️ Gerçek veri bulunamadı, alternatif yaklaşım deneniyor...');
+                businesses = [];
+            }
+            
+        } catch (realDataError) {
+            console.log('❌ Gerçek veri arama hatası:', realDataError.message);
+            businesses = [];
+        }
+        
+        // Eğer gerçek veri bulunamadıysa ve hizmet sektörüyse
+        if (businesses.length === 0 && isServiceSector) {
+            // Gerçek veri bulunamadı, Python'daki gibi alternatif veri oluştur
             businesses = [
                 {
                     name: `${keyword} Ajansı ${city || 'Uşak'}`,
@@ -36,7 +125,7 @@ export default async function handler(req, res) {
                     phone: '0276 555 01 01',
                     email: 'info@seoajansi.com',
                     website: 'www.seoajansi.com',
-                    source: 'Hizmet Sektörü Verisi'
+                    source: 'Alternatif Hizmet Verisi (Gerçek veri bulunamadı)'
                 },
                 {
                     name: `${city || 'Uşak'} ${keyword} Uzmanı`,
@@ -44,7 +133,7 @@ export default async function handler(req, res) {
                     phone: '0276 555 02 02',
                     email: 'contact@seoexpert.com',
                     website: 'www.seoexpert.com',
-                    source: 'Hizmet Sektörü Verisi'
+                    source: 'Alternatif Hizmet Verisi (Gerçek veri bulunamadı)'
                 },
                 {
                     name: `${keyword} Danışmanlık ${city || 'Uşak'}`,
@@ -52,7 +141,7 @@ export default async function handler(req, res) {
                     phone: '0276 555 03 03',
                     email: 'hello@seocons.com',
                     website: 'www.seocons.com',
-                    source: 'Hizmet Sektörü Verisi'
+                    source: 'Alternatif Hizmet Verisi (Gerçek veri bulunamadı)'
                 },
                 {
                     name: `${keyword} Hizmetleri ${city || 'Uşak'}`,
@@ -60,7 +149,7 @@ export default async function handler(req, res) {
                     phone: '0276 555 04 04',
                     email: 'support@seoservices.com',
                     website: 'www.seoservices.com',
-                    source: 'Hizmet Sektörü Verisi'
+                    source: 'Alternatif Hizmet Verisi (Gerçek veri bulunamadı)'
                 },
                 {
                     name: `${keyword} Merkezi ${city || 'Uşak'}`,
@@ -68,7 +157,7 @@ export default async function handler(req, res) {
                     phone: '0276 555 05 05',
                     email: 'info@seomerkezi.com',
                     website: 'www.seomerkezi.com',
-                    source: 'Hizmet Sektörü Verisi'
+                    source: 'Alternatif Hizmet Verisi (Gerçek veri bulunamadı)'
                 },
                 {
                     name: `${keyword} Ekibi ${city || 'Uşak'}`,
@@ -76,7 +165,7 @@ export default async function handler(req, res) {
                     phone: 'Bulunamadı',
                     email: 'Bulunamadı',
                     website: 'www.seoekibi.com',
-                    source: 'Hizmet Sektörü Verisi'
+                    source: 'Alternatif Hizmet Verisi (Gerçek veri bulunamadı)'
                 },
                 {
                     name: `${keyword} Studio ${city || 'Uşak'}`,
@@ -84,15 +173,18 @@ export default async function handler(req, res) {
                     phone: 'Bulunamadı',
                     email: 'Bulunamadı',
                     website: 'Bulunamadı',
-                    source: 'Hizmet Sektörü Verisi'
+                    source: 'Alternatif Hizmet Verisi (Gerçek veri bulunamadı)'
                 }
             ];
-            console.log(`💼 Hizmet sektörü verisi: ${businesses.length} işletme (Python mantığıyla)`);
-        } else {
+            console.log(`💼 Alternatif hizmet verisi: ${businesses.length} işletme (gerçek veri bulunamadı)`);
+        }
+        
+        // Eğer hala veri yoksa, fiziksel işletmeler için OpenStreetMap
+        if (businesses.length === 0) {
             // Fiziksel işletmeler için basit OpenStreetMap çağrısı
             try {
                 const osmUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(keyword + ' ' + (city || 'turkey'))}&countrycodes=tr&limit=10`;
-                console.log('🌍 OpenStreetMap API çağrısı yapılıyor...');
+                console.log('🌍 Son çare OpenStreetMap API çağrısı yapılıyor...');
                 
                 const response = await fetch(osmUrl, {
                     headers: {
@@ -109,13 +201,13 @@ export default async function handler(req, res) {
                             phone: item.extratags?.phone || 'Bulunamadı',
                             website: item.extratags?.website || 'Bulunamadı',
                             email: item.extratags?.email || 'Bulunamadı',
-                            source: 'OpenStreetMap'
+                            source: 'OpenStreetMap (Son Çare)'
                         }));
-                        console.log(`🗺️ OSM verisi: ${businesses.length} işletme`);
+                        console.log(`🗺️ Son çare OSM verisi: ${businesses.length} işletme`);
                     }
                 }
             } catch (osmError) {
-                console.log('⚠️ OSM çağrısı başarısız:', osmError.message);
+                console.log('⚠️ Son çare OSM çağrısı başarısız:', osmError.message);
                 businesses = [];
             }
         }
