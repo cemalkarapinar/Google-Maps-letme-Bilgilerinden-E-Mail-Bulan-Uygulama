@@ -24,8 +24,9 @@ export default async function handler(req, res) {
         // Python kodundaki gibi çoklu kaynak stratejisi
         const businesses = await tryMultipleSourcesAdvanced(keyword, city, country);
 
-        // E-mail adreslerini geliştir
-        const enhancedBusinesses = await enhanceBusinessesWithEmails(businesses);
+        // E-mail adreslerini geliştir - basit versiyon
+        // const enhancedBusinesses = await enhanceBusinessesWithEmails(businesses);
+        const enhancedBusinesses = businesses; // Şimdilik direkt döndür
 
         res.status(200).json({
             success: true,
