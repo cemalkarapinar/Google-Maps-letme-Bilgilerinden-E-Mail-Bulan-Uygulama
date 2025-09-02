@@ -949,25 +949,10 @@ class GoogleMapsScraperWeb {
                 if (names.length > 0) break;
             }
             
-            // Eğer isim bulunamazsa, genel text pattern'leri dene
+            // Eğer isim bulunamazsa, hiçbir sahte veri üretme
             if (names.length === 0) {
-                // Regex ile işletme ismi pattern'lerini ara
-                const businessPatterns = [
-                    /"name"\s*:\s*"([^"]+)"/g,
-                    /data-value="([^"]+)"/g,
-                    /aria-label="([^"]+)"/g
-                ];
-                
-                for (const pattern of businessPatterns) {
-                    const matches = [...html.matchAll(pattern)];
-                    matches.forEach(match => {
-                        const name = match[1]?.trim();
-                        if (name && name.length > 2 && !name.includes('Google') && !name.includes('button')) {
-                            names.push(name);
-                        }
-                    });
-                    if (names.length > 0) break;
-                }
+                console.log('⚠️ Google Maps HTML\'de işletme ismi bulunamadı, boş dönüyor');
+                return []; // Sahte veri üretme!
             }
             
             // Telefon numaralarını bul
@@ -1003,21 +988,20 @@ class GoogleMapsScraperWeb {
                 }
             }
             
-            // İşletmeleri oluştur - Python daki gibi
-            const maxItems = Math.max(names.length, 5); // En az 5 işletme bulmaya çalış
-            
-            for (let i = 0; i < maxItems && i < 10; i++) {
-                const name = names[i] || `${query.split(' ')[0]} İşletmesi ${i + 1}`;
+            // Sadece gerçek bulunan isimleri kullan - sahte veri üretme!
+            for (let i = 0; i < names.length && i < 10; i++) {
+                const name = names[i]; // Sahte isim üretme!
                 
-                // Keyword relevance kontrolu - Python daki gibi
+                if (!name || name.length < 3) {
+                    continue; // Geçersiz isimleri atla
+                }
+                // Keyword relevance kontrolu - Python daki gibi - SADECE GERÇEK VERİ!
                 const keyword = query.split(' ')[0].toLowerCase();
                 const isRelevant = name.toLowerCase().includes(keyword) || 
-                                 keyword.includes(name.toLowerCase().split(' ')[0]) ||
-                                 name.toLowerCase().includes('seo') ||
-                                 name.toLowerCase().includes('dijital') ||
-                                 name.toLowerCase().includes('teknoloji');
+                                 keyword.includes(name.toLowerCase().split(' ')[0]);
                 
-                if (isRelevant && name.length > 2) {
+                // Sadece gerçek ve alakalı işletmeleri ekle
+                if (isRelevant && name.length > 2 && !name.includes('İşletmesi')) {
                     businesses.push({
                         name: name,
                         website: websites[i] || 'Bulunamadı',
