@@ -1121,8 +1121,7 @@ class GoogleMapsScraperWeb {
                             'User-Agent': 'GoogleMapsScraperWeb/2.0 (Educational Purpose; Python-Based)',
                             'Accept': 'application/json',
                             'Accept-Language': 'tr,en;q=0.9'
-                        },
-                        signal: AbortSignal.timeout(12000)
+                        }
                     });
                     
                     if (response.ok) {

@@ -36,10 +36,18 @@ export default async function handler(req, res) {
         });
 
     } catch (error) {
-        console.error('API Error:', error);
+        console.error('API Error Details:', {
+            message: error.message,
+            stack: error.stack,
+            keyword,
+            city,
+            country
+        });
+        
         res.status(500).json({
             success: false,
-            error: error.message,
+            error: `API Hatası: ${error.message}`,
+            details: 'OpenStreetMap API çağrısında hata oluştu',
             data: []
         });
     }
@@ -196,7 +204,7 @@ async function tryOpenStreetMapAPIAdvanced(keyword, city, country) {
     try {
         console.log(`🔍 OpenStreetMap API - Gerçek veri aranıyor: ${keyword} ${city}`);
         
-        // Türkiye odaklı OpenStreetMap sorguları
+        // Türkiye odaklı OpenStreetMap sorguları - Sadece çalışan endpoint'ler
         const endpoints = [
             // En basit ve etkili sorgu
             `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(keyword + ' ' + city)}&countrycodes=tr&limit=25&addressdetails=1&extratags=1`,
@@ -210,14 +218,13 @@ async function tryOpenStreetMapAPIAdvanced(keyword, city, country) {
             try {
                 console.log(`🌍 OSM API çağrısı yapılıyor...`);
                 
-                const response = await fetch(url, {
+        const response = await fetch(url, {
                     method: 'GET',
                     headers: {
                         'User-Agent': 'GoogleMapsBusinessScraper/1.0 (https://emailtelefonbulanuygulama.vercel.app/)',
                         'Accept': 'application/json',
                         'Accept-Language': 'tr,en;q=0.9'
-                    },
-                    signal: AbortSignal.timeout(15000)
+                    }
                 });
                 
                 if (response.ok) {
@@ -395,8 +402,7 @@ async function tryOverpassAPI(keyword, city, country) {
             headers: {
                 'Content-Type': 'text/plain',
                 'User-Agent': 'GoogleMapsBusinessScraper/1.0'
-            },
-            signal: AbortSignal.timeout(20000)
+            }
         });
         
         if (response.ok) {
