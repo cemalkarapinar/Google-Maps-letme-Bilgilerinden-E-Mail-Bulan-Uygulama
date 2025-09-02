@@ -206,35 +206,39 @@ class GoogleMapsScraperWeb {
 
     async attemptRealDataScraping(keyword, country, city) {
         try {
-            this.updateStatus('🔍 OpenStreetMap API\'lerden veri çekiliyor...');
+            this.updateStatus('🔍 Python mantığıyla geliştirilmiş veri arama başlatılıyor...');
             
-            // Doğrudan OpenStreetMap API'larını dene
-            const osmBusinesses = await this.tryOpenStreetMapAPI(keyword, country, city);
-            
-            if (osmBusinesses && osmBusinesses.length > 0) {
-                this.displayRealData(osmBusinesses, 'OpenStreetMap');
-                
-                this.scrapingEndTime = Date.now();
-                const totalTime = Math.floor((this.scrapingEndTime - this.scrapingStartTime) / 1000);
-                const minutes = Math.floor(totalTime / 60);
-                const seconds = totalTime % 60;
-                
-                this.updateStatus(`✅ ${osmBusinesses.length} gerçek işletme bulundu! (OpenStreetMap) Süre: ${minutes}:${seconds.toString().padStart(2, '0')}`);
-                
-                this.elements.startBtn.disabled = false;
-                this.elements.stopBtn.disabled = true;
-                this.elements.sendMailBtn.disabled = false;
-                this.isScrapingActive = false;
-                
-                if (this.progressInterval) {
-                    clearInterval(this.progressInterval);
-                }
-                
+            // 1. Önce Vercel API'yi dene (Python tarzı geliştirilmiş)
+            const vercelData = await this.tryAdvancedVercelAPI(keyword, country, city);
+            if (vercelData && vercelData.length > 0) {
+                this.displayRealData(vercelData, 'Vercel Advanced API');
+                this.finishScraping(vercelData.length, 'Vercel Advanced API');
                 return;
             }
             
-            console.log('OpenStreetMap\'ten veri bulunamadı');
-            this.updateStatus('❌ OpenStreetMap\'ten veri bulunamadı. Farklı bir kelime deneyin.');
+            // 2. Doğrudan OpenStreetMap API'larini dene (geliştirilmiş)
+            const osmBusinesses = await this.tryOpenStreetMapAPIAdvanced(keyword, country, city);
+            if (osmBusinesses && osmBusinesses.length > 0) {
+                // E-mail adreslerini geliştir
+                await this.enhanceBusinessesWithEmailsAdvanced(osmBusinesses);
+                
+                this.displayRealData(osmBusinesses, 'OpenStreetMap Advanced');
+                this.finishScraping(osmBusinesses.length, 'OpenStreetMap Advanced');
+                return;
+            }
+            
+            // 3. Gelişmiş web scraping dene
+            const webData = await this.tryAdvancedWebScrapingFrontend(keyword, country, city);
+            if (webData && webData.length > 0) {
+                await this.enhanceBusinessesWithEmailsAdvanced(webData);
+                
+                this.displayRealData(webData, 'Advanced Web Scraping');
+                this.finishScraping(webData.length, 'Advanced Web Scraping');
+                return;
+            }
+            
+            console.log('Hiçbir kaynaktan gerçek veri bulunamadı');
+            this.updateStatus('❌ Gerçek veri bulunamadı. Farklı bir anahtar kelime deneyin.');
             
             this.elements.startBtn.disabled = false;
             this.elements.stopBtn.disabled = true;
@@ -245,7 +249,7 @@ class GoogleMapsScraperWeb {
             }
             
         } catch (error) {
-            console.error('OpenStreetMap veri çekme hatası:', error);
+            console.error('Gelişmiş veri çekme hatası:', error);
             this.updateStatus('❌ Hata oluştu. Farklı bir kelime deneyin.');
             
             this.elements.startBtn.disabled = false;
@@ -1027,8 +1031,8 @@ class GoogleMapsScraperWeb {
         }
     }
 
-    // Vercel API ile gerçek veri çekme
-    async tryRealBusinessData(keyword, country, city) {
+    // Vercel API ile gerçek veri çekme - Geliştirilmiş
+    async tryAdvancedVercelAPI(keyword, country, city) {
         try {
             // GitHub Pages kontrolü - statik hosting'de serverless function çalışmaz
             if (window.location.hostname.includes('github.io')) {
@@ -1037,9 +1041,9 @@ class GoogleMapsScraperWeb {
                 return null; // Diğer API'lere geç
             }
             
-            this.updateStatus('🔍 Vercel API\'den gerçek veri çekiliyor...');
+            this.updateStatus('🔍 Vercel Advanced API\'den gerçek veri çekiliyor...');
             
-            // Vercel serverless function'ı çağır
+            // Vercel serverless function'ı çağır (geliştirilmiş)
             const apiUrl = window.location.hostname === 'localhost' 
                 ? 'http://localhost:3000/api/search'  // Local development
                 : '/api/search';  // Production (Vercel)
@@ -1050,10 +1054,10 @@ class GoogleMapsScraperWeb {
                 city: city || ''
             });
             
-            console.log(`Vercel API çağrısı: ${apiUrl}?${params.toString()}`);
+            console.log(`Vercel Advanced API çağrısı: ${apiUrl}?${params.toString()}`);
             
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 saniye timeout
+            const timeoutId = setTimeout(() => controller.abort(), 20000); // 20 saniye timeout
             
             const response = await fetch(`${apiUrl}?${params.toString()}`, {
                 method: 'GET',
@@ -1068,34 +1072,472 @@ class GoogleMapsScraperWeb {
             
             if (response.ok) {
                 const result = await response.json();
-                console.log('Vercel API yanıtı:', result);
+                console.log('Vercel Advanced API yanıtı:', result);
                 
                 if (result.success && result.data && result.data.length > 0) {
-                    console.log(`Vercel API başarılı: ${result.data.length} işletme bulundu`);
+                    console.log(`Vercel Advanced API başarılı: ${result.data.length} işletme bulundu`);
                     return result.data;
                 } else {
-                    console.log('Vercel API boş sonuç döndü');
+                    console.log('Vercel Advanced API boş sonuç döndü');
                     return null;
                 }
             } else {
-                console.error('Vercel API hatası:', response.status, response.statusText);
+                console.error('Vercel Advanced API hatası:', response.status, response.statusText);
                 return null;
             }
             
         } catch (error) {
-            if (error.name === 'Abort çağrı hatası:', error);
+            if (error.name === 'AbortError') {
+                console.log('Vercel Advanced API timeout');
+            } else {
+                console.error('Vercel Advanced API çağrı hatası:', error);
+            }
             return null;
         }
     }
 
-    // OpenCage Geocoding API
-    async tryOpenCageAPI(keyword, city, country) {
+    // Python'daki gibi gelişmiş OpenStreetMap API
+    async tryOpenStreetMapAPIAdvanced(keyword, country, city) {
         try {
-            const query = `${keyword} ${city} ${country}`.trim();
-            // OpenCage API key gerektirir, demo için null
+            this.updateStatus('🔍 OpenStreetMap Advanced API kontrol ediliyor...');
+            
+            const location = city ? `${city}, ${country}` : country;
+            
+            // Python'daki gibi çoklu endpoint stratejisi
+            const endpoints = [
+                // Şehir + anahtar kelime (en spesifik) - Python'daki gibi
+                `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(keyword + ' ' + city)}&countrycodes=tr&format=json&addressdetails=1&limit=20&extratags=1&dedupe=1`,
+                // Photon API şehir odaklı - geliştirilmiş
+                `https://photon.komoot.io/api/?q=${encodeURIComponent(keyword + ' ' + city + ' türkiye')}&limit=20&lang=tr`,
+                // Nominatim genel - geliştirilmiş filtreler
+                `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(keyword + ' ' + location)}&format=json&addressdetails=1&limit=20&extratags=1&dedupe=1`,
+            ];
+            
+            for (const url of endpoints) {
+                try {
+                    console.log(`OSM Advanced API deneniyor: ${url.includes('photon') ? 'Photon' : 'Nominatim'}`);
+                    const response = await fetch(url, {
+                        headers: {
+                            'User-Agent': 'GoogleMapsScraperWeb/2.0 (Educational Purpose; Python-Based)',
+                            'Accept': 'application/json',
+                            'Accept-Language': 'tr,en;q=0.9'
+                        },
+                        signal: AbortSignal.timeout(12000)
+                    });
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        console.log(`OSM Advanced API yanıt: ${data?.length || data?.features?.length || 0} sonuç`);
+                        
+                        if (data && (data.length > 0 || (data.features && data.features.length > 0))) {
+                            let businesses;
+                            
+                            if (url.includes('photon.komoot.io')) {
+                                // Photon API format - geliştirilmiş
+                                businesses = data.features?.map(item => ({
+                                    name: item.properties?.name || item.properties?.street || 'Bilinmeyen İşletme',
+                                    address: this.formatPhotonAddressAdvanced(item.properties),
+                                    phone: item.properties?.phone || item.properties?.['contact:phone'] || 'Bulunamadı',
+                                    website: item.properties?.website || item.properties?.['contact:website'] || 'Bulunamadı',
+                                    email: item.properties?.email || item.properties?.['contact:email'] || 'Bulunamadı',
+                                    source: 'Photon API Advanced',
+                                    city: item.properties?.city || item.properties?.state || ''
+                                })) || [];
+                            } else {
+                                // Nominatim format - Python tarzı parsing
+                                businesses = data.map(item => ({
+                                    name: this.extractBusinessNameAdvanced(item),
+                                    address: item.display_name || 'Adres bulunamadı',
+                                    phone: this.extractContactInfo(item, 'phone') || 'Bulunamadı',
+                                    website: this.extractContactInfo(item, 'website') || 'Bulunamadı',
+                                    email: this.extractContactInfo(item, 'email') || 'Bulunamadı',
+                                    source: 'OpenStreetMap Advanced'
+                                }));
+                            }
+                            
+                            // Python'daki gibi gelişmiş filtreleme
+                            let validBusinesses = this.filterValidBusinessesAdvanced(businesses, keyword);
+                            
+                            // Şehir filtresi uygula (Python mantığı)
+                            if (city && validBusinesses.length > 0) {
+                                const cityFiltered = this.applyCityFilterAdvanced(validBusinesses, city);
+                                
+                                if (cityFiltered.length > 0) {
+                                    validBusinesses = cityFiltered;
+                                    console.log(`${city} şehrinde ${cityFiltered.length} işletme bulundu`);
+                                } else {
+                                    console.log(`${city} şehrinde spesifik sonuç yok, genel sonuçlar: ${validBusinesses.length}`);
+                                }
+                            }
+                            
+                            if (validBusinesses.length > 0) {
+                                console.log(`OSM Advanced API başarılı: ${validBusinesses.length} işletme bulundu`);
+                                return validBusinesses;
+                            }
+                        }
+                    }
+                } catch (endpointError) {
+                    console.log(`Endpoint hatası: ${endpointError.message}`);
+                }
+            }
+            
             return null;
         } catch (error) {
+            console.error('OpenStreetMap Advanced API hatası:', error);
             return null;
+        }
+    }
+
+    // Scraping'i bitir - helper function
+    finishScraping(count, source) {
+        this.scrapingEndTime = Date.now();
+        const totalTime = Math.floor((this.scrapingEndTime - this.scrapingStartTime) / 1000);
+        const minutes = Math.floor(totalTime / 60);
+        const seconds = totalTime % 60;
+        
+        this.updateStatus(`✅ ${count} gerçek işletme bulundu! (${source}) Süre: ${minutes}:${seconds.toString().padStart(2, '0')}`);
+        
+        this.elements.startBtn.disabled = false;
+        this.elements.stopBtn.disabled = true;
+        this.elements.sendMailBtn.disabled = false;
+        this.isScrapingActive = false;
+        
+        if (this.progressInterval) {
+            clearInterval(this.progressInterval);
+        }
+    }
+
+    // Python'daki gibi gelişmiş e-mail bulma
+    async enhanceBusinessesWithEmailsAdvanced(businesses) {
+        this.updateStatus(`📧 ${businesses.length} işletme için e-mail adresleri aranyor...`);
+        
+        for (let i = 0; i < businesses.length; i++) {
+            const business = businesses[i];
+            
+            if (business.email === 'Bulunamadı' && business.website !== 'Bulunamadı') {
+                try {
+                    const email = await this.findEmailFromWebsiteAdvanced(business.website);
+                    if (email) {
+                        business.email = email;
+                        console.log(`E-mail bulundu: ${email} (${business.name})`);
+                    }
+                } catch (error) {
+                    console.error(`E-mail arama hatası (${business.website}):`, error);
+                }
+            }
+            
+            if (i % 3 === 0) {
+                this.updateStatus(`📧 E-mail adresleri aranyor... ${i + 1}/${businesses.length}`);
+            }
+        }
+    }
+
+    // Python'daki gibi gelişmiş web scraping - frontend
+    async tryAdvancedWebScrapingFrontend(keyword, city, country) {
+        try {
+            this.updateStatus('🔍 Python tarzı gelişmiş web scraping deneniyor...');
+            
+            // Python'daki gibi çoklu arama sorguları
+            const searchQueries = [
+                `${keyword} ${city} telefon email adres`,
+                `${keyword} firması ${city}`,
+                `${keyword} ${city} ${country} iletişim`,
+                `"${keyword}" ${city} site:*.com`
+            ];
+            
+            // Çalışan CORS proxy'leri
+            const corsProxies = [
+                'https://api.codetabs.com/v1/proxy?quest=',
+                'https://corsproxy.io/?'
+            ];
+            
+            for (const searchQuery of searchQueries) {
+                for (const proxy of corsProxies) {
+                    try {
+                        const searchUrl = `https://www.google.com/search?q=${encodeURIComponent(searchQuery)}&gl=tr&hl=tr&num=20`;
+                        const proxyUrl = proxy + encodeURIComponent(searchUrl);
+                        
+                        console.log(`Web scraping: ${searchQuery.substring(0, 30)}...`);
+                        
+                        const response = await fetch(proxyUrl, {
+                            headers: {
+                                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+                            },
+                            signal: AbortSignal.timeout(10000)
+                        });
+                        
+                        if (response.ok) {
+                            const html = await response.text();
+                            
+                            if (html && html.length > 1000) {
+                                const businesses = this.parseGoogleSearchResultsAdvanced(html, keyword, city);
+                                if (businesses.length > 0) {
+                                    console.log(`Web scraping başarılı: ${businesses.length} işletme (${searchQuery.substring(0, 20)}...)`);
+                                    return businesses;
+                                }
+                            }
+                        }
+                    } catch (error) {
+                        console.log(`Proxy ${proxy.substring(0, 20)}... hatası: ${error.message}`);
+                        continue;
+                    }
+                }
+            }
+            
+            return null;
+        } catch (error) {
+            console.error('Gelişmiş web scraping hatası:', error);
+            return null;
+        }
+    }
+
+    // Python'daki gibi helper function'lar
+    formatPhotonAddressAdvanced(properties) {
+        if (!properties) return 'Adres bulunamadı';
+        
+        const parts = [];
+        if (properties.name && properties.name !== properties.street) parts.push(properties.name);
+        if (properties.street) parts.push(properties.street);
+        if (properties.housenumber) parts.push('No: ' + properties.housenumber);
+        if (properties.neighbourhood) parts.push(properties.neighbourhood);
+        if (properties.district) parts.push(properties.district);
+        if (properties.city) parts.push(properties.city);
+        if (properties.postcode) parts.push(properties.postcode);
+        if (properties.state && properties.state !== properties.city) parts.push(properties.state);
+        if (properties.country) parts.push(properties.country);
+        
+        return parts.length > 0 ? parts.join(', ') : 'Adres bulunamadı';
+    }
+
+    extractBusinessNameAdvanced(item) {
+        if (item.name && item.name.length > 2) {
+            return item.name;
+        }
+        
+        if (item.display_name) {
+            const parts = item.display_name.split(',');
+            for (const part of parts) {
+                const cleaned = part.trim();
+                if (cleaned.length > 3 && 
+                    !cleaned.match(/^\d+$/) && 
+                    !cleaned.toLowerCase().includes('unnamed') &&
+                    !cleaned.toLowerCase().includes('turkey') &&
+                    !cleaned.toLowerCase().includes('türkiye')) {
+                    return cleaned;
+                }
+            }
+        }
+        
+        return 'Bilinmeyen İşletme';
+    }
+
+    extractContactInfo(item, type) {
+        const extratags = item.extratags || {};
+        const tags = item.tags || {};
+        
+        const contactKeys = {
+            phone: ['phone', 'contact:phone', 'telephone', 'mobile'],
+            website: ['website', 'contact:website', 'url', 'homepage'],
+            email: ['email', 'contact:email', 'e-mail']
+        };
+        
+        const keys = contactKeys[type] || [];
+        
+        for (const key of keys) {
+            if (extratags[key]) return extratags[key];
+            if (tags[key]) return tags[key];
+        }
+        
+        return null;
+    }
+
+    filterValidBusinessesAdvanced(businesses, keyword) {
+        return businesses.filter(b => {
+            const name = b.name || '';
+            const isValidName = name !== 'Bilinmeyen İşletme' && 
+                               name.length > 2 &&
+                               !name.includes('undefined') &&
+                               !name.includes('null') &&
+                               name.trim() !== '';
+            
+            const keywordRelevant = !keyword || 
+                                   name.toLowerCase().includes(keyword.toLowerCase()) ||
+                                   keyword.toLowerCase().includes(name.toLowerCase().split(' ')[0]);
+            
+            return isValidName && keywordRelevant;
+        });
+    }
+
+    applyCityFilterAdvanced(businesses, city) {
+        return businesses.filter(b => {
+            const address = (b.address || '').toLowerCase();
+            const name = (b.name || '').toLowerCase();
+            const cityLower = city.toLowerCase();
+            
+            return address.includes(cityLower) || 
+                   name.includes(cityLower) ||
+                   (b.city && b.city.toLowerCase().includes(cityLower));
+        });
+    }
+
+    // Python'daki gibi gelişmiş e-mail bulma
+    async findEmailFromWebsiteAdvanced(websiteUrl) {
+        try {
+            if (!websiteUrl || websiteUrl === 'Bulunamadı') return null;
+            
+            let url = websiteUrl;
+            if (!url.startsWith('http')) {
+                url = 'https://' + url;
+            }
+            
+            const corsProxies = [
+                'https://api.codetabs.com/v1/proxy?quest=',
+                'https://corsproxy.io/?'
+            ];
+            
+            for (const proxy of corsProxies) {
+                try {
+                    const proxyUrl = proxy + encodeURIComponent(url);
+                    const response = await fetch(proxyUrl, {
+                        signal: AbortSignal.timeout(8000),
+                        headers: {
+                            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+                        }
+                    });
+                    
+                    if (response.ok) {
+                        const html = await response.text();
+                        
+                        if (html) {
+                            const email = this.extractBestEmailAdvanced(html, url);
+                            if (email) {
+                                return email;
+                            }
+                        }
+                    }
+                } catch (proxyError) {
+                    console.log(`Proxy ${proxy.substring(0, 20)}... başarısız: ${proxyError.message}`);
+                    continue;
+                }
+            }
+            
+            return null;
+        } catch (error) {
+            console.error('Website e-mail arama hatası:', error);
+            return null;
+        }
+    }
+
+    extractBestEmailAdvanced(content, domainUrl) {
+        try {
+            const emailPatterns = [
+                /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g,
+                /mailto:([A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,})/gi,
+                /"email"\s*:\s*"([^"]+@[^"]+)"/gi,
+                /'email'\s*:\s*'([^']+@[^']+)'/gi
+            ];
+            
+            const allEmails = [];
+            
+            for (const pattern of emailPatterns) {
+                const matches = content.match(pattern);
+                if (matches) {
+                    allEmails.push(...matches.map(email => 
+                        email.replace(/^(mailto:|"email"\s*:\s*"|'email'\s*:\s*')/i, '')
+                             .replace(/["'\]\)\}>]$/, '')
+                             .trim()
+                    ));
+                }
+            }
+            
+            if (allEmails.length === 0) return null;
+            
+            const uniqueEmails = [...new Set(allEmails)];
+            
+            const spamKeywords = [
+                'noreply', 'no-reply', 'donotreply', 'example.com', 'test.com',
+                'dummy', 'fake', 'sample', 'placeholder', 'your-email'
+            ];
+            
+            const validEmails = uniqueEmails.filter(email => {
+                const emailLower = email.toLowerCase();
+                return emailLower.length > 5 && 
+                       email.includes('@') && 
+                       email.includes('.') &&
+                       !spamKeywords.some(spam => emailLower.includes(spam));
+            });
+            
+            if (validEmails.length === 0) return null;
+            
+            return validEmails[0];
+            
+        } catch (error) {
+            console.error('E-mail çıkarma hatası:', error);
+            return null;
+        }
+    }
+
+    parseGoogleSearchResultsAdvanced(html, keyword, city) {
+        const businesses = [];
+        
+        try {
+            const resultPatterns = [
+                /<h3[^>]*>([^<]+)<\/h3>/g,
+                /<div[^>]*class="[^"]*BNeawe[^"]*"[^>]*>([^<]+)<\/div>/g
+            ];
+            
+            const phonePatterns = [
+                /(\+90[\s\-]?\d{3}[\s\-]?\d{3}[\s\-]?\d{2}[\s\-]?\d{2})/g,
+                /(0\d{3}[\s\-]?\d{3}[\s\-]?\d{2}[\s\-]?\d{2})/g
+            ];
+            
+            const emailPattern = /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g;
+            
+            const names = [];
+            for (const pattern of resultPatterns) {
+                let match;
+                while ((match = pattern.exec(html)) !== null && names.length < 10) {
+                    const name = match[1].trim();
+                    if (name.length > 3 && !name.includes('...') && !name.toLowerCase().includes('google')) {
+                        names.push(name);
+                    }
+                }
+            }
+            
+            const phones = [];
+            const emails = [];
+            
+            for (const pattern of phonePatterns) {
+                const phoneMatches = html.match(pattern) || [];
+                phones.push(...phoneMatches.slice(0, names.length));
+            }
+            
+            const emailMatches = html.match(emailPattern) || [];
+            emails.push(...emailMatches.slice(0, names.length));
+            
+            for (let i = 0; i < Math.min(names.length, 8); i++) {
+                const business = {
+                    name: names[i],
+                    website: 'Bulunamadı',
+                    address: city ? `${city}, Türkiye` : 'Türkiye',
+                    phone: phones[i] || 'Bulunamadı',
+                    email: emails[i] || 'Bulunamadı',
+                    source: 'Google Search Advanced'
+                };
+                
+                const isRelevant = business.name.toLowerCase().includes(keyword.toLowerCase()) ||
+                                  (city && business.name.toLowerCase().includes(city.toLowerCase()));
+                
+                if (isRelevant && business.name.length > 3) {
+                    businesses.push(business);
+                }
+            }
+            
+            return businesses;
+            
+        } catch (error) {
+            console.error('Google HTML parsing hatası:', error);
+            return [];
         }
     }
 
