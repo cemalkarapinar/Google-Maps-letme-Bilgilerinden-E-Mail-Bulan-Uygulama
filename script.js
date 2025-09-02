@@ -331,8 +331,8 @@ class GoogleMapsScraperWeb {
             const endpoints = [
                 // Şehir + anahtar kelime (en spesifik)
                 `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(keyword + ' ' + city)}&countrycodes=tr&format=json&addressdetails=1&limit=15&extratags=1`,
-                // Photon API şehir odaklı
-                `https://photon.komoot.io/api/?q=${encodeURIComponent(keyword + ' ' + city)}&limit=15`,
+                // Photon API şehir odaklı - simplified parameters
+                `https://photon.komoot.io/api/?q=${encodeURIComponent(keyword + ' ' + (city || 'turkey'))}&limit=15`,
                 // Nominatim genel
                 `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&addressdetails=1&limit=15&extratags=1`
             ];
@@ -344,8 +344,8 @@ class GoogleMapsScraperWeb {
                         headers: {
                             'User-Agent': 'GoogleMapsScraperWeb/1.0 (Educational Purpose)',
                             'Accept': 'application/json'
-                        },
-                        timeout: 10000
+                        }
+                        // timeout removed - not supported in all browsers
                     });
                     
                     if (response.ok) {
@@ -523,10 +523,12 @@ class GoogleMapsScraperWeb {
                 `${keyword} firması ${city}`, // Alternatif
             ];
             const corsProxies = [
-                'https://corsproxy.io/?',
-                'https://proxy.cors.sh/',
-                'https://api.codetabs.com/v1/proxy?quest=',
-                'https://thingproxy.freeboard.io/fetch/',
+                'https://api.allorigins.win/get?url=',
+                'https://api.codetabs.com/v1/proxy?quest='
+                // Removed unreliable CORS proxies that cause frequent failures
+                // 'https://corsproxy.io/?',
+                // 'https://proxy.cors.sh/',
+                // 'https://thingproxy.freeboard.io/fetch/',
             ];
             
             for (const searchQuery of searchQueries) {
@@ -538,8 +540,8 @@ class GoogleMapsScraperWeb {
                         const response = await fetch(proxyUrl, {
                             headers: {
                                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-                            },
-                            timeout: 10000
+                            }
+                            // timeout removed - not supported everywhere
                         });
                         
                         if (response.ok) {
@@ -744,9 +746,9 @@ class GoogleMapsScraperWeb {
             
             // Çalışan CORS proxy'leri (güncel liste)
             const corsProxies = [
-                'https://api.codetabs.com/v1/proxy?quest=',
-                'https://api.allorigins.win/get?url=',
-                // Diğer proxy'ler geçici olarak devre dışı (sertifika/erişim sorunları)
+                'https://api.allorigins.win/get?url='
+                // Other proxies temporarily disabled due to frequent failures
+                // 'https://api.codetabs.com/v1/proxy?quest=',
                 // 'https://cors-anywhere.herokuapp.com/',
                 // 'https://thingproxy.freeboard.io/fetch/',
             ];
@@ -755,7 +757,7 @@ class GoogleMapsScraperWeb {
                 try {
                     const proxyUrl = proxy + encodeURIComponent(url);
                     const response = await fetch(proxyUrl, {
-                        timeout: 8000,
+                        // timeout removed - AbortSignal.timeout not supported everywhere
                         headers: {
                             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
                         }
@@ -1107,8 +1109,8 @@ class GoogleMapsScraperWeb {
             const endpoints = [
                 // Şehir + anahtar kelime (en spesifik) - Python'daki gibi
                 `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(keyword + ' ' + city)}&countrycodes=tr&format=json&addressdetails=1&limit=20&extratags=1&dedupe=1`,
-                // Photon API şehir odaklı - geliştirilmiş
-                `https://photon.komoot.io/api/?q=${encodeURIComponent(keyword + ' ' + city + ' türkiye')}&limit=20&lang=tr`,
+                // Photon API şehir odaklı - simplified to avoid 400 errors
+                `https://photon.komoot.io/api/?q=${encodeURIComponent(keyword + ' ' + (city || 'turkey'))}&limit=20`,
                 // Nominatim genel - geliştirilmiş filtreler
                 `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(keyword + ' ' + location)}&format=json&addressdetails=1&limit=20&extratags=1&dedupe=1`,
             ];
@@ -1261,8 +1263,8 @@ class GoogleMapsScraperWeb {
                         const response = await fetch(proxyUrl, {
                             headers: {
                                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-                            },
-                            signal: AbortSignal.timeout(10000)
+                            }
+                            // timeout removed - AbortSignal.timeout not supported everywhere
                         });
                         
                         if (response.ok) {
@@ -1390,15 +1392,16 @@ class GoogleMapsScraperWeb {
             }
             
             const corsProxies = [
-                'https://api.codetabs.com/v1/proxy?quest=',
-                'https://corsproxy.io/?'
+                'https://api.allorigins.win/get?url='
+                // Removed unreliable proxies to prevent frequent failures
+                // 'https://api.codetabs.com/v1/proxy?quest='
             ];
             
             for (const proxy of corsProxies) {
                 try {
                     const proxyUrl = proxy + encodeURIComponent(url);
                     const response = await fetch(proxyUrl, {
-                        signal: AbortSignal.timeout(8000),
+                        // timeout removed - AbortSignal.timeout not supported everywhere
                         headers: {
                             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
                         }
