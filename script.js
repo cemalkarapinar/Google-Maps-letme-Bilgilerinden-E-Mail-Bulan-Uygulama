@@ -220,8 +220,9 @@ class GoogleMapsScraperWeb {
             const googleMapsData = await this.tryGoogleMapsScrapingLikePython(keyword, country, city);
             if (googleMapsData && googleMapsData.length > 0) {
                 console.log(`✅ Google Maps Scraping'den ${googleMapsData.length} GERÇEK işletme bulundu (Python tarzı)!`);
-                // E-mail adreslerini geliştir
-                await this.enhanceBusinessesWithEmailsAdvanced(googleMapsData);
+                // Python'daki gibi email adreslerini geliştir
+                this.updateStatus('📧 Python mantığıyla email adresleri aranıyor...');
+                await this.enhanceBusinessesWithEmailsLikePython(googleMapsData);
                 
                 this.displayRealData(googleMapsData, 'Google Maps Scraping (Python Tarzı)');
                 this.finishScraping(googleMapsData.length, 'Google Maps Scraping');
@@ -234,8 +235,9 @@ class GoogleMapsScraperWeb {
             const osmBusinesses = await this.tryOpenStreetMapAPIAdvanced(keyword, country, city);
             if (osmBusinesses && osmBusinesses.length > 0) {
                 console.log(`✅ OpenStreetMap'ten ${osmBusinesses.length} GERÇEK işletme bulundu!`);
-                // E-mail adreslerini geliştir
-                await this.enhanceBusinessesWithEmailsAdvanced(osmBusinesses);
+                // Python'daki gibi email adreslerini geliştir
+                this.updateStatus('📧 Python mantığıyla email adresleri aranıyor...');
+                await this.enhanceBusinessesWithEmailsLikePython(osmBusinesses);
                 
                 this.displayRealData(osmBusinesses, 'OpenStreetMap Gerçek Veri');
                 this.finishScraping(osmBusinesses.length, 'OpenStreetMap Advanced');
@@ -1413,29 +1415,44 @@ class GoogleMapsScraperWeb {
         }
     }
 
-    // Python'daki gibi gelişmiş e-mail bulma
-    async enhanceBusinessesWithEmailsAdvanced(businesses) {
-        this.updateStatus(`📧 ${businesses.length} işletme için e-mail adresleri aranyor...`);
+    // Python'daki gibi güçlü email bulma sistemi
+    async enhanceBusinessesWithEmailsLikePython(businesses) {
+        console.log(`📧 Python mantığıyla ${businesses.length} işletme için email adresleri aranıyor...`);
+        
+        let emailsFound = 0;
         
         for (let i = 0; i < businesses.length; i++) {
             const business = businesses[i];
             
             if (business.email === 'Bulunamadı' && business.website !== 'Bulunamadı') {
                 try {
-                    const email = await this.findEmailFromWebsiteAdvanced(business.website);
-                    if (email) {
-                        business.email = email;
-                        console.log(`E-mail bulundu: ${email} (${business.name})`);
+                    console.log(`🔍 ${business.name} için email aranıyor: ${business.website}`);
+                    
+                    // Python'daki gibi çoklu email arama stratejisi
+                    const foundEmail = await this.findEmailFromWebsiteLikePython(business.website, business.name);
+                    if (foundEmail) {
+                        business.email = foundEmail;
+                        emailsFound++;
+                        console.log(`✅ Email bulundu: ${foundEmail} (${business.name})`);
+                    } else {
+                        console.log(`❌ Email bulunamadı: ${business.name}`);
                     }
                 } catch (error) {
-                    console.error(`E-mail arama hatası (${business.website}):`, error);
+                    console.error(`❌ Email arama hatası (${business.website}):`, error.message);
                 }
             }
             
-            if (i % 3 === 0) {
-                this.updateStatus(`📧 E-mail adresleri aranyor... ${i + 1}/${businesses.length}`);
+            // Progress update
+            if (i % 2 === 0) {
+                this.updateStatus(`📧 Email adresleri aranıyor... ${i + 1}/${businesses.length} (${emailsFound} bulundu)`);
             }
+            
+            // Python'daki gibi rate limiting
+            await new Promise(resolve => setTimeout(resolve, 500));
         }
+        
+        console.log(`🎉 Email arama tamamlandı: ${emailsFound}/${businesses.length} işletmede email bulundu`);
+        this.updateStatus(`✅ Email arama tamamlandı: ${emailsFound} email adresi bulundu`);
     }
 
     // Python'daki gibi gelişmiş web scraping - frontend
@@ -1748,8 +1765,149 @@ class GoogleMapsScraperWeb {
         }
     }
 
-    // Geonames API
-    async tryGeonamesAPI(keyword, city, country) {
+    // Python'daki gibi güçlü website email bulma sistemi
+    async findEmailFromWebsiteLikePython(websiteUrl, businessName) {
+        try {
+            if (!websiteUrl || websiteUrl === 'Bulunamadı') return null;
+            
+            let url = websiteUrl;
+            if (!url.startsWith('http')) {
+                url = 'https://' + url;
+            }
+            
+            console.log(`🌍 Website taraniyor: ${url}`);
+            
+            // Python'daki gibi çoklu CORS proxy sistemi
+            const corsProxies = [
+                'https://api.allorigins.win/get?url='
+            ];
+            
+            for (const proxy of corsProxies) {
+                try {
+                    const proxyUrl = proxy + encodeURIComponent(url);
+                    console.log(`🔍 Proxy ile website çekilyor...`);
+                    
+                    const response = await fetch(proxyUrl, {
+                        headers: {
+                            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+                        }
+                    });
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        const html = data.contents;
+                        
+                        if (html && html.length > 500) {
+                            // Python'daki gibi email çıkarma
+                            const email = this.extractBestEmailLikePython(html, url, businessName);
+                            if (email) {
+                                console.log(`✅ Website'den email bulundu: ${email}`);
+                                return email;
+                            }
+                        }
+                    }
+                } catch (proxyError) {
+                    console.log(`⚠️ Proxy başarısız: ${proxyError.message}`);
+                    continue;
+                }
+            }
+            
+            return null;
+        } catch (error) {
+            console.error('❌ Website email arama hatası:', error);
+            return null;
+        }
+    }
+
+    // Python'daki gibi gelişmiş email çıkarma
+    extractBestEmailLikePython(content, domainUrl, businessName) {
+        try {
+            // Python'daki gibi çoklu email regex pattern'leri
+            const emailPatterns = [
+                /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g,
+                /mailto:([A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,})/gi,
+                /"email"\s*:\s*"([^"]+@[^"]+)"/gi,
+                /'email'\s*:\s*'([^']+@[^']+)'/gi,
+                /data-email=["']([^"']+@[^"']+)["']/gi,
+                /href=["']mailto:([^"']+@[^"']+)["']/gi
+            ];
+            
+            const allEmails = [];
+            
+            // Tüm pattern'leri dene
+            for (const pattern of emailPatterns) {
+                const matches = content.match(pattern);
+                if (matches) {
+                    allEmails.push(...matches.map(email => 
+                        email.replace(/^(mailto:|"email"\s*:\s*"|'email'\s*:\s*'|data-email=["']|href=["']mailto:)/i, '')
+                             .replace(/["'\]\)\}>]$/, '')
+                             .trim()
+                    ));
+                }
+            }
+            
+            if (allEmails.length === 0) return null;
+            
+            // Tekrarları kaldır
+            const uniqueEmails = [...new Set(allEmails)];
+            
+            // Python'daki gibi spam/geçersiz e-mailleri filtrele
+            const spamKeywords = [
+                'noreply', 'no-reply', 'donotreply', 'example.com', 'test.com',
+                'dummy', 'fake', 'sample', 'placeholder', 'your-email',
+                'youremail', 'email@', '@email', 'name@', '@name', 'user@',
+                '@user', 'admin@example', 'test@test', 'info@example'
+            ];
+            
+            const validEmails = uniqueEmails.filter(email => {
+                const emailLower = email.toLowerCase();
+                const isValid = emailLower.length > 5 && 
+                               email.includes('@') && 
+                               email.includes('.') &&
+                               !spamKeywords.some(spam => emailLower.includes(spam)) &&
+                               email.split('@')[1]?.includes('.');
+                return isValid;
+            });
+            
+            if (validEmails.length === 0) return null;
+            
+            // Python'daki gibi domain bazlı önceliklendirme
+            try {
+                const siteDomain = new URL(domainUrl).hostname.toLowerCase();
+                const cleanSiteDomain = siteDomain.replace(/^www\./, '');
+                
+                // Aynı domain'den e-mail varsa öncelik ver
+                for (const email of validEmails) {
+                    const emailDomain = email.split('@')[1]?.toLowerCase();
+                    if (emailDomain === cleanSiteDomain || 
+                        emailDomain?.includes(cleanSiteDomain) || 
+                        cleanSiteDomain.includes(emailDomain || '')) {
+                        return email;
+                    }
+                }
+            } catch (error) {
+                // URL parsing hatası - devam et
+            }
+            
+            // Genel e-mail sağlayıcıları için öncelik sırası (Python'daki gibi)
+            const priorityDomains = ['gmail.com', 'hotmail.com', 'yahoo.com', 'outlook.com'];
+            
+            // Önce kurumsal e-mailleri tercih et
+            for (const email of validEmails) {
+                const emailDomain = email.split('@')[1]?.toLowerCase();
+                if (!priorityDomains.some(provider => emailDomain?.includes(provider))) {
+                    return email;
+                }
+            }
+            
+            // Kurumsal bulunamazsa genel sağlayıcılardan seç
+            return validEmails[0];
+            
+        } catch (error) {
+            console.error('E-mail çıkarma hatası:', error);
+            return null;
+        }
+    }
         // Geonames API CORS ve HTTPS sorunları nedeniyle devre dışı
         console.log('Geonames API geçici olarak devre dışı (CORS/HTTPS sorunları)');
         return null;
