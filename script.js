@@ -1908,6 +1908,9 @@ class GoogleMapsScraperWeb {
             return null;
         }
     }
+
+    // Geonames API
+    async tryGeonamesAPI(keyword, city, country) {
         // Geonames API CORS ve HTTPS sorunları nedeniyle devre dışı
         console.log('Geonames API geçici olarak devre dışı (CORS/HTTPS sorunları)');
         return null;
