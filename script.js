@@ -1245,10 +1245,10 @@ class GoogleMapsScraperWeb {
                 `"${keyword}" ${city} site:*.com`
             ];
             
-            // Çalışan CORS proxy'leri
+            // Güvenilir CORS proxy'leri
             const corsProxies = [
-                'https://api.codetabs.com/v1/proxy?quest=',
-                'https://corsproxy.io/?'
+                'https://api.allorigins.win/get?url=',
+                'https://api.codetabs.com/v1/proxy?quest='
             ];
             
             for (const searchQuery of searchQueries) {

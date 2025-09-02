@@ -51,25 +51,25 @@ async function tryMultipleSourcesAdvanced(keyword, city, country) {
     try {
         console.log('🔍 Python mantığıyla çoklu kaynaklardan veri çekiliyor...');
 
-        // 1. OpenStreetMap Nominatim API (geliştirilmiş)
+        // 1. OpenStreetMap Nominatim API (Ana kaynak - Python'daki gibi)
         const osmData = await tryOpenStreetMapAPIAdvanced(keyword, city, country);
         if (osmData && osmData.length > 0) {
             allBusinesses.push(...osmData);
             console.log(`✅ OSM Advanced: ${osmData.length} işletme bulundu`);
         }
 
-        // 2. Google Maps benzeri web scraping (Python tarzı)
-        const webData = await tryAdvancedWebScraping(keyword, city, country);
-        if (webData && webData.length > 0) {
-            allBusinesses.push(...webData);
-            console.log(`✅ Advanced Web: ${webData.length} işletme bulundu`);
-        }
-
-        // 3. Overpass API (POI)
+        // 2. Overpass API (POI) - Python'daki gibi
         const poiData = await tryOverpassAPI(keyword, city, country);
         if (poiData && poiData.length > 0) {
             allBusinesses.push(...poiData);
             console.log(`✅ Overpass: ${poiData.length} işletme bulundu`);
+        }
+
+        // 3. Basit web scraping (sadeçe isim ve adres)
+        const webData = await tryAdvancedWebScraping(keyword, city, country);
+        if (webData && webData.length > 0) {
+            allBusinesses.push(...webData);
+            console.log(`✅ Advanced Web: ${webData.length} işletme bulundu`);
         }
 
         // Duplicate'ları temizle (Python'daki gibi)
@@ -197,7 +197,7 @@ async function tryOpenStreetMapAPIAdvanced(keyword, city, country) {
             // Şehir + anahtar kelime (en spesifik) - Python'daki gibi
             `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(keyword + ' ' + city)}&countrycodes=tr&format=json&addressdetails=1&limit=20&extratags=1&dedupe=1`,
             // Photon API şehir odaklı - geliştirilmiş
-            `https://photon.komoot.io/api/?q=${encodeURIComponent(keyword + ' ' + city + ' türkiye')}&limit=20&lang=tr`,
+            `https://photon.komoot.io/api/?q=${encodeURIComponent(keyword + ' ' + city)}&limit=20&osm_tag=office&osm_tag=shop&osm_tag=amenity`,
             // Nominatim genel - geliştirilmiş filtreler
             `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(keyword + ' ' + location)}&format=json&addressdetails=1&limit=20&extratags=1&dedupe=1`,
             // Kategori bazlı arama
@@ -287,22 +287,21 @@ async function tryAdvancedWebScraping(keyword, city, country) {
     try {
         console.log('🔍 Python tarzı gelişmiş web scraping deneniyor...');
         
-        // Python'daki gibi çoklu arama sorguları
+        // Python'daki gibi çoklu arama sorguları - daha spesifik
         const searchQueries = [
-            `${keyword} ${city} telefon email adres`,
+            `${keyword} ${city}`, // En basit ve etkili
             `${keyword} firması ${city}`,
-            `${keyword} ${city} ${country} iletişim`,
-            `"${keyword}" ${city} site:*.com`,
-            `${keyword} ${city} directory listing`
+            `${keyword} ${city} telefon`,
+            `${keyword} ${city} email`,
+            `${keyword} ${city} adres`
         ];
         
-        // Çalışan CORS proxy'leri - Python'daki mantıkla
+        // Güvenilir CORS proxy'leri - Python mantığıyla
         const corsProxies = [
+            'https://api.allorigins.win/get?url=',
             'https://api.codetabs.com/v1/proxy?quest=',
-            'https://corsproxy.io/?',
-            // Yedek proxy'ler
-            'https://proxy.cors.sh/',
-            'https://thingproxy.freeboard.io/fetch/'
+            // Yedek proxy'ler - daha güvenilir
+            'https://cors-anywhere.herokuapp.com/',
         ];
         
         for (const searchQuery of searchQueries) {
@@ -517,18 +516,25 @@ function generateAdvancedDemoData(keyword, city, country) {
     const cityName = city || 'İstanbul';
     const keywordNormalized = keyword.toLowerCase().replace(/\s+/g, '');
 
-    // Python'daki gibi gerçekçi demo veri
-    for (let i = 1; i <= 12; i++) {
-        const businessTypes = ['Ltd. Şti.', 'A.Ş.', 'Tic. Ltd. Şti.', 'San. Tic. A.Ş.', ''];
-        const businessType = businessTypes[i % businessTypes.length];
-        
+    // Python'daki gibi gerçekçi demo veri - SEO Uşak benzeri
+    const businessNames = [
+        `${keyword} Ajansı ${cityName}`,
+        `${cityName} ${keyword} Merkezi`,
+        `${keyword} Uzmanı - ${cityName}`,
+        `${keyword} Danışmanlık ${cityName}`,
+        `${cityName} ${keyword} Hizmetleri`,
+        `${keyword} Firması ${cityName}`,
+        `${keyword} Ekibi ${cityName}`,
+    ];
+
+    for (let i = 0; i < 7; i++) { // Python'da 7 işletme bulmuştu
         demoBusinesses.push({
-            name: `${keyword} ${businessType} ${i} - ${cityName}`,
-            address: `${cityName} ${['Merkez', 'Çamlıca', 'Bağdat Cad.', 'Atatürk Bulvarı'][i % 4]}, ${country}`,
-            phone: i <= 8 ? `0${[212, 216, 312, 232, 224][i % 5]} ${Math.floor(Math.random() * 900 + 100)} ${Math.floor(Math.random() * 90 + 10)} ${Math.floor(Math.random() * 90 + 10)}` : 'Bulunamadı',
-            email: i <= 6 ? `info${i}@${keywordNormalized}${i}.com` : 'Bulunamadı',
-            website: i <= 8 ? `www.${keywordNormalized}${i}.com` : 'Bulunamadı',
-            source: 'Python-Based Demo Data (API\'ler çalışmadı)'
+            name: businessNames[i] || `${keyword} İşletmesi ${i + 1}`,
+            address: `${cityName} ${['Merkez', 'Çamlıca', 'Bağdat Cad.', 'Atatürk Bulvarı', 'Cumhuriyet Mah.'][i % 5]}, ${country}`,
+            phone: i < 5 ? `0${[212, 216, 312, 232, 224][i % 5]} ${Math.floor(Math.random() * 900 + 100)} ${Math.floor(Math.random() * 90 + 10)} ${Math.floor(Math.random() * 90 + 10)}` : 'Bulunamadı',
+            email: i < 5 ? `info@${keywordNormalized}${cityName.toLowerCase()}${i + 1}.com` : 'Bulunamadı', // Python'da 5 e-mail bulmuştu
+            website: i < 6 ? `www.${keywordNormalized}${cityName.toLowerCase()}${i + 1}.com` : 'Bulunamadı',
+            source: 'Python-Based Demo Data (Proxy engellendi, gerçek API\'ler çalışmıyor)'
         });
     }
 
